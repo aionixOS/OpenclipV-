@@ -1,0 +1,465 @@
+{
+  "sourcePath": "c:\\Users\\Prajjwal\\Downloads\\Openclip-main\\Openclip-main",
+  "targetPath": "c:\\OpenClip",
+  "queue": [
+    {
+      "relativePath": "README.md",
+      "isBinary": false,
+      "status": "done"
+    },
+    {
+      "relativePath": "LICENSE",
+      "isBinary": false,
+      "status": "done"
+    },
+    {
+      "relativePath": ".codereplay-session.json",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "setup.sh",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "start.sh",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\1000038842_1773584728206.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\1000038842_1773584919657.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\1000038843_1773584929451.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\508a15e2e57dd5234268171bf3dfa84d_1773584718577.jpg",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\bg_1773587378884.mp4",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\code_1773564837746.html",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\code_1773564863405.html",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\code_1773564876965.html",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\code_1773564886050.html",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\screen_1773564825221.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\screen_1773564837746.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\screen_1773564863405.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\screen_1773564876966.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\screen_1773564886049.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\Screenshot_2026-03-15_201052_1773585666795.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "attached_assets\\stitch_(1)_1773564705562.zip",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\.env.example",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\requirements.txt",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\api.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\captioner.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\clipper.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\database.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\downloader.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\layout_detector.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\llm.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\reframer.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\settings.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\speaker_detector.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\test_gemini.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\test_genai.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\test_llm.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\test_quota.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\tracker.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\transcriber.py",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\bin\\ffmpeg.zip",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\bin\\ffmpeg-master-latest-win64-gpl\\presets\\libvpx-1080p.ffpreset",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\bin\\ffmpeg-master-latest-win64-gpl\\presets\\libvpx-1080p50_60.ffpreset",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\bin\\ffmpeg-master-latest-win64-gpl\\presets\\libvpx-360p.ffpreset",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\bin\\ffmpeg-master-latest-win64-gpl\\presets\\libvpx-720p.ffpreset",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "backend\\bin\\ffmpeg-master-latest-win64-gpl\\presets\\libvpx-720p50_60.ffpreset",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\README.md",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\.env.example",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\.gitignore",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\next.config.ts",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\package-lock.json",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\package.json",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\tailwind.config.ts",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\tsconfig.json",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\eslint.config.mjs",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\postcss.config.mjs",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\favicon.ico",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\globals.css",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\layout.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\page.module.css",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\page.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\create\\page.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\project\\[id]\\page.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\app\\settings\\page.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\ProgressBar.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\VideoPlayer.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\create\\ClipGrid.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\create\\ProgressBar.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\create\\SettingsWarning.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\create\\UrlInput.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\dashboard\\EmptyState.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\dashboard\\ProjectCard.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\dashboard\\ProjectCardSkeleton.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\layout\\Navbar.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\project\\ClipCard.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\project\\VideoEmbed.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\components\\settings\\CaptionStyleCard.tsx",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\lib\\api.ts",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\lib\\types.ts",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\lib\\utils.ts",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\lib\\websocket.ts",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\file.svg",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\footer-character.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\globe.svg",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\hero-bg.mp4",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\hero-character.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\logo.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\next.svg",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\screenshot.png",
+      "isBinary": true,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\vercel.svg",
+      "isBinary": false,
+      "status": "pending"
+    },
+    {
+      "relativePath": "frontend\\public\\window.svg",
+      "isBinary": false,
+      "status": "pending"
+    }
+  ],
+  "currentFileIndex": 2,
+  "currentOffset": 0,
+  "speed": {
+    "cps": 9,
+    "humanized": true,
+    "mode": "char"
+  },
+  "startedAt": "2026-06-17T14:03:30.534Z",
+  "updatedAt": "2026-06-17T14:03:30.534Z"
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html class="""dark" lang="""en"><head>
+<meta charset="""utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="""viewport"/>
+<title>Settings - AI Orchestration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="""https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="""stylesheet"/>
+<link href="""https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="""stylesheet"/>
+<script id="""tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2e1ded",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#000000",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .active-glow {
+            box-shadow: 0 0 20px rgba(46, 29, 237, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="""flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="""w-72 flex flex-col border-r border-slate-800/50 bg-black/40 backdrop-blur-xl">
+<div class="""p-8">
+<div class="""flex items-center gap-3 text-primary">
+<span class="""material-symbols-outlined text-3xl font-bold">bolt</span>
+<span class="""text-xl font-bold tracking-tight text-slate-100">Quantum</span>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<div class="""flex items-center gap-4 px-4 py-3 rounded-xl glass-hover cursor-pointer transition-all">
+<span class="""material-symbols-outlined text-slate-400">dashboard</span>
+<span class="font-medium text-slate-300">Overview</span>
+</div>
+<div class="""flex items-center gap-4 px-4 py-3 rounded-xl glass-hover cursor-pointer transition-all">
+<span class="""material-symbols-outlined text-slate-400">analytics</span>
+<span class="font-medium text-slate-300">Analytics</span>
+</div>
+<div class="""flex items-center gap-4 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 transition-all">
+<span class="""material-symbols-outlined">settings</span>
+<span class="""font-bold">Settings</span>
+</div>
+<div class="""flex items-center gap-4 px-4 py-3 rounded-xl glass-hover cursor-pointer transition-all">
+<span class="""material-symbols-outlined text-slate-400">person</span>
+<span class="""font-medium text-slate-300">Account</span>
+</div>
+</nav>
+<div class="""p-6">
+<div class="glass rounded-2xl p-4 flex items-center gap-3">
+<div class="""size-10 rounded-full bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold border border-white/10" data-alt="""User avatar with purple gradient">
+                    AS
+                </div>
+<div class="""flex-1 min-w-0">
+<p class="text-sm font-bold truncate">Alex Smith</p>
+<p class="text-xs text-slate-500 truncate">Pro Member</p>
+</div>
+<span class="material-symbols-outlined text-slate-500 text-sm">more_vert</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto bg-background-dark">
+<!-- Header -->
+<header class="sticky top-0 z-10 flex items-center justify-between px-10 py-6 border-b border-slate-800/50 bg-black/80 backdrop-blur-md"><div class="flex items-center gap-4">
+<button class="""size-10 flex items-center justify-center rounded-xl glass glass-hover transition-all text-slate-400 hover:text-white">
+<span class=""

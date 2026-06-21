@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="""utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="""viewport"/>
+<title>ClipFlow AI - View Project</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="""stylesheet"/>
+<link href="""https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="""stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2e1ded",
+                        "accent": "#7c3aed",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#000000",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2e1ded;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="""bg-background-dark font-display text-slate-100 overflow-hidden h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="""flex items-center justify-between px-8 py-4 border-b border-white/10 glass z-50">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(46,29,237,0.5)]">
+<span class="""material-symbols-outlined text-white">movie_filter</span>
+</div>
+<h2 class="""text-xl font-bold tracking-tight">ClipFlow <span class="""text-primary">AI</span></h2>
+</div>
+<nav class="""hidden md:flex items-center gap-6 ml-10">
+<a class="""text-sm font-medium text-slate-400 hover:text-white transition-colors" href="""#">Dashboard</a>
+<a class="""text-sm font-medium text-white" href="#">Projects</a>
+<a class="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="""#">Assets</a>
+</nav>
+</div>
+<div class="""flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full glass border-white/5">
+<div class="""size-2 bg-green-500 rounded-full animate-pulse"></div>
+<span class="text-xs font-medium text-slate-300">GPU Active</span>
+</div>
+<button class="p-2 rounded-xl glass-hover transition-all text-slate-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-white/10 mx-2"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold text-white">Alex Rivera</p>
+<p class="""text-[10px] text-primary">Pro Plan</p>
+</div>
+<div class=""

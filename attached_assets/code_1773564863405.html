@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html class="""dark" lang="""en"><head>
+<meta charset="""utf-8"/>
+<meta content="""width=device-width, initial-scale=1.0" name="""viewport"/>
+<script src="""https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="""stylesheet"/>
+<link href="""https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="""stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2e1ded",
+                        "accent-purple": "#8b5cf6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#000000",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(46, 29, 237, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+        .glow-accent {
+            box-shadow: 0 0 20px rgba(46, 29, 237, 0.3);
+        }
+        .step-line {
+            background: linear-gradient(180deg, #2e1ded 0%, rgba(139, 92, 246, 0.2) 100%);
+        }
+    </style>
+</head>
+<body class="""bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Navigation -->
+<header class="""flex items-center justify-between border-b border-white/10 px-6 py-4 lg:px-20 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg glow-accent">
+<span class="material-symbols-outlined text-white text-2xl">deployed_code</span>
+</div>
+<h2 class=""
