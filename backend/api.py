@@ -81,19 +81,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Allow the Next.js frontend dev server
-_allowed_origins = [
-    "http://localhost:3000",
-    "http://localhost:5000",
-]
-_replit_domain = os.environ.get("REPLIT_DEV_DOMAIN")
-if _replit_domain:
-    _allowed_origins.append(f"https://{_replit_domain}")
-
+# Allow any frontend origin since the frontend will be hosted externally
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allowed_origins,
-    allow_origin_regex=r"https://.*\.replit\.dev",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -367,6 +358,13 @@ async def _run_pipeline(project_id: str, youtube_url: str) -> None:
                 tags=suggestion.get("tags", []),
             )
 
+        # Aggressive cleanup: remove the large original downloaded video after successful processing
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+
         await database.update_project_status(project_id, "done")
         await _broadcast(project_id, "done", 100, "Complete")
 
@@ -376,6 +374,14 @@ async def _run_pipeline(project_id: str, youtube_url: str) -> None:
             f.write(traceback.format_exc())
             
         logger.exception("Pipeline failed for project %s", project_id)
+        
+        # Aggressive cleanup: remove the large original downloaded video after failure
+        try:
+            if 'file_path' in locals() and file_path and os.path.exists(file_path):
+                os.remove(file_path)
+        except OSError:
+            pass
+
         await database.update_project_status(project_id, "error")
         await _broadcast(
             project_id, "error", 0, f"Pipeline error: {exc}"
@@ -551,4 +557,3 @@ async def websocket_progress(websocket: WebSocket, project_id: str):
 if __name__ == "__main__":
     import uvicorn  # type: ignore
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
-�

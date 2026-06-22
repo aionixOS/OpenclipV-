@@ -6,12 +6,8 @@ pydantic
 python-multipart
 websockets
 python-dotenv
-openai-whisper
 httpx
 cryptography
-mediapipe
 tenacity
-Pillow
-numpy
-youtube-transcript-api
+vosk
 google-genai

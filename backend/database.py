@@ -54,6 +54,10 @@ async def init_db() -> None:
     Called once at application startup to guarantee the schema is ready
     before any request arrives.
     """
+    db_dir = os.path.dirname(DB_PATH)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+        
     conn = await _get_connection()
     try:
         await conn.executescript(
