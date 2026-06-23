@@ -628,6 +628,14 @@ async def websocket_progress(websocket: WebSocket, project_id: str):
         _ws_connections[project_id] = set()
     _ws_connections[project_id].add(websocket)
 
+    # Immediately send the last known state so UI doesn't hang at 0%
+    last_state = _progress_state.get(project_id)
+    if last_state:
+        try:
+            await websocket.send_json(last_state)
+        except Exception:
+            pass
+
     try:
         # Stay alive — wait for the client to close or send pings
         while True:
