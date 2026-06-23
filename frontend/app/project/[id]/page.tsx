@@ -17,6 +17,20 @@ function getYouTubeId(url: string) {
     return m ? m[1] : null;
 }
 
+function formatExpiresIn(dateStr: string): string {
+    if (!dateStr) return "";
+    const dt = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+    const diff = new Date(dt).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    
+    if (hours > 0) return `Expires in ${hours}h ${m}m`;
+    return `Expires in ${m}m`;
+}
+
 const STAGE_LABEL: Record<string, string> = {
     downloading: "Downloading video…",
     transcribing: "Extracting captions…",
@@ -191,7 +205,7 @@ export default function ProjectPage() {
                         { label: "Status", val: project.status.charAt(0).toUpperCase() + project.status.slice(1) },
                         { label: "Clips", val: `${project.clips?.length || 0} generated` },
                         { label: "Source", val: ytId ? `YouTube: ${ytId}` : "Unknown" },
-                        { label: "Created", val: new Date(project.created_at).toLocaleDateString() },
+                        { label: "Retention", val: project.expires_at ? formatExpiresIn(project.expires_at) : "Unknown" },
                     ].map(({ label, val }) => (
                         <div key={label} className="glass rounded-2xl p-4">
                             <p className="text-xs text-slate-500 mb-1">{label}</p>

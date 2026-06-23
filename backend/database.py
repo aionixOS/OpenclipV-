@@ -64,10 +64,12 @@ async def init_db() -> None:
             """
             CREATE TABLE IF NOT EXISTS projects (
                 id          TEXT PRIMARY KEY,
+                user_id     TEXT NOT NULL,
                 youtube_url TEXT NOT NULL,
                 title       TEXT,
                 status      TEXT NOT NULL DEFAULT 'pending',
-                created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at  DATETIME NOT NULL DEFAULT (datetime('now', '+2 hours'))
             );
 
             CREATE TABLE IF NOT EXISTS clips (
@@ -110,6 +112,14 @@ async def init_db() -> None:
                 await conn.commit()
             except Exception:
                 pass  # column already exists — safe to ignore
+                
+        # Migrate projects table
+        try:
+            await conn.execute("ALTER TABLE projects ADD COLUMN user_id TEXT NOT NULL DEFAULT 'unknown'")
+            await conn.execute("ALTER TABLE projects ADD COLUMN expires_at DATETIME NOT NULL DEFAULT (datetime('now', '+2 hours'))")
+            await conn.commit()
+        except Exception:
+            pass
 
     except Exception as exc:
         raise RuntimeError(f"Failed to initialise database: {exc}") from exc
@@ -121,12 +131,13 @@ async def init_db() -> None:
 # Project CRUD
 # ---------------------------------------------------------------------------
 
-async def create_project(youtube_url: str) -> dict:
+async def create_project(youtube_url: str, user_id: str) -> dict:
     """
     Insert a new project row and return its id + initial status.
 
     Args:
         youtube_url: The YouTube video URL to associate with this project.
+        user_id: The ID of the authenticated user.
 
     Returns:
         dict with ``project_id`` and ``status`` keys.
@@ -135,8 +146,8 @@ async def create_project(youtube_url: str) -> dict:
     conn = await _get_connection()
     try:
         await conn.execute(
-            "INSERT INTO projects (id, youtube_url) VALUES (?, ?)",
-            (project_id, youtube_url),
+            "INSERT INTO projects (id, user_id, youtube_url) VALUES (?, ?, ?)",
+            (project_id, user_id, youtube_url),
         )
         await conn.commit()
         ret = {"project_id": project_id, "status": "pending"}
@@ -189,7 +200,7 @@ async def update_project_title(project_id: str, title: str) -> None:
         await conn.close()
 
 
-async def get_all_projects() -> list[dict]:
+async def get_all_projects(user_id: str) -> list[dict]:
     """
     Return every project, newest first, with a ``clip_count`` field.
 
@@ -198,19 +209,21 @@ async def get_all_projects() -> list[dict]:
 
     Returns:
         List of project dicts, each containing:
-        id, title, status, created_at, clip_count.
+        id, title, status, created_at, expires_at, clip_count.
     """
     conn = await _get_connection()
     try:
         cursor = await conn.execute(
             """
-            SELECT p.id, p.title, p.youtube_url, p.status, p.created_at,
+            SELECT p.id, p.title, p.youtube_url, p.status, p.created_at, p.expires_at,
                    COUNT(c.id) AS clip_count
             FROM projects p
             LEFT JOIN clips c ON c.project_id = p.id
+            WHERE p.user_id = ?
             GROUP BY p.id
             ORDER BY p.created_at DESC
-            """
+            """,
+            (user_id,)
         )
         rows = await cursor.fetchall()
         ret = [
@@ -220,6 +233,7 @@ async def get_all_projects() -> list[dict]:
                 "youtube_url": row["youtube_url"],
                 "status": row["status"],
                 "created_at": row["created_at"],
+                "expires_at": row["expires_at"],
                 "clip_count": row["clip_count"],
             }
             for row in rows
@@ -231,12 +245,13 @@ async def get_all_projects() -> list[dict]:
     return ret
 
 
-async def get_project(project_id: str) -> Optional[dict]:
+async def get_project(project_id: str, user_id: str = None) -> Optional[dict]:
     """
     Return a single project by ID, including its list of clips.
 
     Args:
         project_id: UUID of the project to fetch.
+        user_id: Optional user_id to restrict access.
 
     Returns:
         A dict with project fields plus a ``clips`` list, or *None* if
@@ -245,9 +260,11 @@ async def get_project(project_id: str) -> Optional[dict]:
     conn = await _get_connection()
     try:
         # Fetch project row
-        cursor = await conn.execute(
-            "SELECT * FROM projects WHERE id = ?", (project_id,)
-        )
+        if user_id:
+            cursor = await conn.execute("SELECT * FROM projects WHERE id = ? AND user_id = ?", (project_id, user_id))
+        else:
+            cursor = await conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+        
         row = await cursor.fetchone()
         if not row:
             return None
@@ -258,6 +275,7 @@ async def get_project(project_id: str) -> Optional[dict]:
             "youtube_url": row["youtube_url"],
             "status": row["status"],
             "created_at": row["created_at"],
+            "expires_at": row["expires_at"],
         }
 
         # Fetch associated clips

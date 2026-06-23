@@ -17,12 +17,27 @@ function getYouTubeId(url: string): string | null {
 }
 
 function formatTimeAgo(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const dt = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+    const diff = Date.now() - new Date(dt).getTime();
     const hours = Math.floor(diff / 3600000);
     if (hours < 1) return "just now";
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
+}
+
+function formatExpiresIn(dateStr: string): string {
+    if (!dateStr) return "";
+    const dt = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+    const diff = new Date(dt).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    
+    if (hours > 0) return `Expires in ${hours}h ${m}m`;
+    return `Expires in ${m}m`;
 }
 
 function StatusBadge({ status }: { status: Project["status"] }) {
@@ -258,6 +273,7 @@ function DashboardContent() {
                                         <p className="mt-0.5 text-xs text-slate-500">
                                             {formatTimeAgo(project.created_at)}
                                             {project.clip_count ? ` • ${project.clip_count} clips` : ""}
+                                            {project.expires_at && ` • ${formatExpiresIn(project.expires_at)}`}
                                         </p>
                                     </div>
                                     <button

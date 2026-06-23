@@ -11,3 +11,5 @@ cryptography
 tenacity
 vosk
 google-genai
+motor
+pymongo
