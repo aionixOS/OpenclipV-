@@ -37,6 +37,7 @@ from fastapi import (  # type: ignore
     WebSocketDisconnect,
     HTTPException,
     BackgroundTasks,
+    Header,
 )
 from fastapi.staticfiles import StaticFiles  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore
@@ -197,7 +198,7 @@ class ProjectDetailResponse(BaseModel):
 # Background processing pipeline
 # ---------------------------------------------------------------------------
 
-async def _run_pipeline(project_id: str, youtube_url: str) -> None:
+async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Optional[str] = None) -> None:
     """
     Execute the full AI-powered pipeline in the background.
 
@@ -272,7 +273,7 @@ async def _run_pipeline(project_id: str, youtube_url: str) -> None:
         await _broadcast(project_id, "analyzing", 55, "AI analyzing video…")
 
         provider = await settings_mod.get_setting("llm_provider") or "openai"
-        api_key = await settings_mod.get_setting("llm_api_key") or ""
+        api_key = override_api_key or await settings_mod.get_setting("llm_api_key") or ""
         model = await settings_mod.get_setting("llm_model") or ""
 
         try:
@@ -396,6 +397,7 @@ async def _run_pipeline(project_id: str, youtube_url: str) -> None:
 async def create_project(
     body: CreateProjectRequest,
     background_tasks: BackgroundTasks,
+    x_openai_key: Optional[str] = Header(None)
 ):
     """
     Create a new project from a YouTube URL.
@@ -411,7 +413,7 @@ async def create_project(
     project_id = result["project_id"]
 
     # Fire-and-forget — runs after the response is sent
-    background_tasks.add_task(_run_pipeline, project_id, body.youtube_url)
+    background_tasks.add_task(_run_pipeline, project_id, body.youtube_url, x_openai_key)
 
     return {"project_id": project_id, "status": "pending"}
 
