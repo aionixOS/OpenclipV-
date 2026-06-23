@@ -103,12 +103,13 @@ app.mount("/files", StaticFiles(directory=TMP_DIR), name="files")
 # ---------------------------------------------------------------------------
 
 _ws_connections: dict[str, set[WebSocket]] = {}
+_progress_state: dict[str, dict] = {}
 
 
 async def _broadcast(project_id: str, stage: str, percent: float, message: str) -> None:
     """
     Send a progress update to every WebSocket client listening for
-    the given project.
+    the given project. Also update global state for HTTP polling clients.
 
     Args:
         project_id: UUID of the project.
@@ -117,6 +118,10 @@ async def _broadcast(project_id: str, stage: str, percent: float, message: str) 
         message:    Human-readable status text.
     """
     payload = {"stage": stage, "percent": percent, "message": message}
+    
+    # Store globally for HTTP polling (Vercel bypass)
+    _progress_state[project_id] = payload
+    
     dead: list[WebSocket] = []
     for ws in _ws_connections.get(project_id, set()):
         try:
@@ -517,6 +522,12 @@ async def update_settings(body: UpdateSettingsRequest):
 # ---------------------------------------------------------------------------
 # WebSocket — real-time progress
 # ---------------------------------------------------------------------------
+
+@app.get("/api/progress/{project_id}")
+async def get_progress(project_id: str):
+    """HTTP Polling endpoint for progress updates (bypasses Vercel WS limits)."""
+    return _progress_state.get(project_id, {"stage": "Initializing...", "percent": 0, "message": ""})
+
 
 @app.websocket("/ws/progress/{project_id}")
 async def websocket_progress(websocket: WebSocket, project_id: str):

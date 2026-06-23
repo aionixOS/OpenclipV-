@@ -119,9 +119,12 @@ export default function SettingsPage() {
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">API Key</label>
                                             {hasApiKey && !editingKey ? (
                                                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
-                                                        API key saved
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2 text-sm font-bold">
+                                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                                                            API key saved securely
+                                                        </div>
+                                                        <p className="text-xs text-emerald-500/80 font-medium">Your API key is protected and stored strictly in your local browser cache.</p>
                                                     </div>
                                                     <button type="button" onClick={() => setEditingKey(true)} className="text-xs font-bold hover:underline">Change</button>
                                                 </div>

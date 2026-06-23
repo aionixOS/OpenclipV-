@@ -39,59 +39,39 @@ export function useProjectProgress(projectId: string | null): ProgressState {
             : 'ws://localhost:8000';
         const WS_URL = `${wsBase}/ws/progress/${projectId}`;
 
-        const connect = () => {
+        const connect = async () => {
             if (!isMounted) return;
 
             try {
-                const ws = new WebSocket(WS_URL);
-                wsRef.current = ws;
+                // Because Vercel does not support WebSockets through Rewrites (and browsers block ws:// on https://),
+                // we use standard HTTP polling which flows perfectly through the Vercel proxy rewrite.
+                const res = await fetch(`/api/progress/${projectId}`);
+                if (res.ok) {
+                    setConnected(true);
+                    const data: ProgressUpdate = await res.json();
+                    
+                    if (data.stage) setStage(data.stage);
+                    if (data.percent) setPercent(data.percent);
 
-                ws.onopen = () => {
-                    if (isMounted) {
-                        setConnected(true);
-                        console.log(`[WebSocket] Connected to project: ${projectId}`);
+                    if (data.message && data.message !== message) {
+                        setMessage(data.message);
+                        setLogs(prev => {
+                            // Don't duplicate the same consecutive message
+                            if (prev.length > 0 && prev[prev.length - 1].includes(data.message!)) return prev;
+                            const newLog = `[${new Date().toLocaleTimeString()}] ${data.message}`;
+                            return [...prev, newLog].slice(-50);
+                        });
                     }
-                };
-
-                ws.onmessage = (event) => {
-                    if (!isMounted) return;
-                    try {
-                        const data: ProgressUpdate = JSON.parse(event.data);
-                        setStage(data.stage || "Processing...");
-                        setPercent(data.percent || 0);
-
-                        if (data.message) {
-                            setMessage(data.message);
-                            setLogs(prev => {
-                                const newLog = `[${new Date().toLocaleTimeString()}] ${data.message}`;
-                                // Keep last 50 logs
-                                return [...prev, newLog].slice(-50);
-                            });
-                        }
-                    } catch (err) {
-                        console.error("[WebSocket] Failed to parse message:", err);
-                    }
-                };
-
-                ws.onclose = () => {
-                    if (isMounted) {
-                        setConnected(false);
-                        console.log("[WebSocket] Disconnected. Reconnecting in 3s...");
-                        // Auto-reconnect
-                        reconnectTimeoutRef.current = setTimeout(connect, 3000);
-                    }
-                };
-
-                ws.onerror = () => {
-                    // Suppress empty Event object logs when connection fails
-                    // The onclose handler will handle reconnecting
-                    ws.close();
-                };
-            } catch (err) {
-                console.error("[WebSocket] Setup Error:", err);
-                if (isMounted) {
-                    reconnectTimeoutRef.current = setTimeout(connect, 3000);
+                } else {
+                    setConnected(false);
                 }
+            } catch (err) {
+                console.error("[Progress] Polling Error:", err);
+                setConnected(false);
+            }
+
+            if (isMounted) {
+                reconnectTimeoutRef.current = setTimeout(connect, 1000);
             }
         };
 
