@@ -87,6 +87,9 @@ def download_video(
     import shutil
     ffmpeg_exe = shutil.which("ffmpeg")
     ffmpeg_dir = os.path.dirname(ffmpeg_exe) if ffmpeg_exe else ""
+    
+    cookies_file = os.path.join(os.path.dirname(__file__), "cookies.txt")
+    print(cookies_file)
 
     cmd = [
         _resolve_ytdlp_exe(),
@@ -95,7 +98,8 @@ def download_video(
         "--extractor-args", "youtube:player_client=android,ios,web",
         # Prefer best video+audio up to 1080p, prioritise h264 (avc) codec
         # to avoid AV1/VP9 transcoding which causes Windows file-lock issues
-        "-f", "bestvideo[height<=1080][vcodec^=avc1]+bestaudio[ext=m4a]/bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/137+140/136+140/22/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+        "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "--cookies", cookies_file,
         "--merge-output-format", "mp4",
         "--no-mtime",
         "--ffmpeg-location", ffmpeg_dir,
@@ -108,6 +112,10 @@ def download_video(
         "--compat-options", "no-keep-subs,no-live-chat",
         url,
     ]
+    
+    if os.path.isfile(cookies_file):
+      cmd.extend(["--cookies", cookies_file])
+
 
     logger.info("Running yt-dlp: %s", " ".join(cmd))
 

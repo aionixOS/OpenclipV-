@@ -70,6 +70,8 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+# Silence aiosqlite debug logs
+logging.getLogger("aiosqlite").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
