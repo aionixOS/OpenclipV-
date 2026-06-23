@@ -108,7 +108,17 @@ export async function saveSettings(
         },
         body: JSON.stringify(settings)
     });
-    if (!res.ok) throw new Error("Failed to save settings");
+    if (!res.ok) {
+        let errMsg = "Failed to save settings";
+        try {
+            const errData = await res.json();
+            errMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail || errData);
+        } catch {
+            const text = await res.text().catch(() => "");
+            if (text) errMsg = text;
+        }
+        throw new Error(errMsg);
+    }
 }
 
 export async function getCaptionStyles(): Promise<CaptionStyle[]> {

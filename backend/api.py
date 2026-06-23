@@ -43,6 +43,7 @@ from fastapi import (  # type: ignore
     Form,
 )
 from fastapi.staticfiles import StaticFiles  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from pydantic import BaseModel  # type: ignore
 from dotenv import load_dotenv  # type: ignore
 
