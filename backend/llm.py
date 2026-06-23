@@ -10,7 +10,7 @@ import random
 from typing import Optional, Callable
 
 import httpx  # type: ignore
-from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_not_exception_type
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,10 @@ _TIMEOUT = 120.0
 
 # Rate limit tracking - stores the last retry-after value
 _last_retry_after: float = 0.0
+
+class NonRetryableError(Exception):
+    """Raised for errors that should not be retried (e.g. 4xx client errors, invalid API keys)."""
+    pass
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -360,6 +364,7 @@ def _get_retry_wait():
 @retry(
     stop=stop_after_attempt(6),  # 6 attempts total
     wait=_get_retry_wait(),
+    retry=retry_if_not_exception_type(NonRetryableError),
     reraise=True
 )
 async def _call_provider_with_retry(provider: str, api_key: str, model: str, prompt: str) -> str:
@@ -399,6 +404,11 @@ async def _call_provider_with_retry(provider: str, api_key: str, model: str, pro
 
             logger.warning(f"Rate limit hit (429). retry-after header: {retry_after_str}. Waiting {retry_after:.1f}s...")
             await asyncio.sleep(retry_after)
+            raise
+        elif e.response.status_code in (400, 401, 403, 404):
+            # Client errors (bad API key, invalid model, etc.) should fail immediately
+            logger.error(f"Client error {e.response.status_code} from LLM provider: {e.response.text}")
+            raise NonRetryableError(f"API Error ({e.response.status_code}): Check your API key or selected model.") from e
         raise
     except RuntimeError as e:
         # Handle Gemini rate limit and timeout errors (raised as RuntimeError)
@@ -512,6 +522,12 @@ async def _call_gemini(prompt: str, api_key: str, model: str) -> str:
             if "timeout" in error_str or "deadline" in error_str:
                 logger.warning(f"Gemini timeout detected: {e}")
                 raise RuntimeError(f"Timeout: {e}")
+            
+            # If it's another API error (e.g., 400 invalid model, 401/403 invalid key)
+            if "400" in error_str or "401" in error_str or "403" in error_str or "404" in error_str or "not found" in error_str:
+                logger.error(f"Client error from Gemini: {e}")
+                raise NonRetryableError(f"API Error: Check your API key or selected model. Details: {e}") from e
+                
             raise
 
     # Use asyncio.wait_for with timeout to prevent hanging

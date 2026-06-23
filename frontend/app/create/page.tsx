@@ -31,7 +31,7 @@ export default function CreateProjectPage() {
     const [apiError, setApiError] = useState<string | null>(null);
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
     const [provider, setProvider] = useState<Settings["llm_provider"]>("openai");
-    const [model, setModel] = useState("gpt-4o");
+    const [model, setModel] = useState("gpt-4o-mini");
     const logsEndRef = useRef<HTMLDivElement>(null);
 
     const [dragActive, setDragActive] = useState(false);

@@ -302,7 +302,7 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
 
         llm_api_key = override_api_key or await settings_mod.get_setting("llm_api_key", user_id=user_id)
         llm_provider = await settings_mod.get_setting("llm_provider", user_id=user_id) or "openai"
-        llm_model = await settings_mod.get_setting("llm_model", user_id=user_id) or ("gpt-4o-mini" if llm_provider == "openai" else "gemini-2.5-flash")
+        llm_model = await settings_mod.get_setting("llm_model", user_id=user_id) or ("gpt-4o-mini" if llm_provider == "openai" else "gemini-2.0-flash")
 
         try:
             def analyze_progress(stage: str, percent: float, msg: str):
