@@ -312,7 +312,7 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
                 )
 
             suggestions: list[dict] = await llm.get_clip_suggestions(
-                transcript_segments, provider, api_key, model, video_duration,
+                transcript_segments, llm_provider, llm_api_key, llm_model, video_duration,
                 progress_callback=analyze_progress
             )
 

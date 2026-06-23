@@ -157,28 +157,46 @@ export async function getCaptionStyles(): Promise<CaptionStyle[]> {
     ];
 }
 
-export const uploadProject = async (file: File): Promise<{ project_id: string }> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    
-    const res = await fetch(`${getBaseUrl()}/api/projects/upload`, {
-        method: 'POST',
-        headers: {
-            'x-user-id': getUserId()
-            // Do not set Content-Type for FormData, browser will set it with boundary
-        },
-        body: formData
-    });
-    if (!res.ok) {
-        let errMsg = "Failed to upload project";
-        try {
-            const errData = await res.json();
-            errMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail || errData);
-        } catch {
-            const text = await res.text().catch(() => "");
-            if (text) errMsg = text;
+export const uploadProject = (
+    file: File, 
+    onProgress?: (progress: number) => void
+): Promise<{ project_id: string }> => {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${getBaseUrl()}/api/projects/upload`);
+        xhr.setRequestHeader('x-user-id', getUserId());
+
+        if (onProgress) {
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    onProgress(Math.round((e.loaded / e.total) * 100));
+                }
+            };
         }
-        throw new Error(errMsg);
-    }
-    return res.json();
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    resolve(JSON.parse(xhr.responseText));
+                } catch {
+                    reject(new Error("Invalid JSON response"));
+                }
+            } else {
+                let errMsg = "Failed to upload project";
+                try {
+                    const errData = JSON.parse(xhr.responseText);
+                    errMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail || errData);
+                } catch {
+                    if (xhr.responseText) errMsg = xhr.responseText;
+                }
+                reject(new Error(errMsg));
+            }
+        };
+
+        xhr.onerror = () => reject(new Error("Network Error: Failed to connect to server"));
+
+        const formData = new FormData();
+        formData.append("file", file);
+        xhr.send(formData);
+    });
 };
