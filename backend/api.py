@@ -37,7 +37,6 @@ from fastapi import (  # type: ignore
     WebSocketDisconnect,
     HTTPException,
     BackgroundTasks,
-    Depends,
 )
 from fastapi.staticfiles import StaticFiles  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore
@@ -60,7 +59,6 @@ import llm  # type: ignore
 import reframer # type: ignore
 import captioner # type: ignore
 import settings as settings_mod  # type: ignore
-from auth import get_current_user # type: ignore
 
 import logging
 
@@ -130,33 +128,6 @@ async def _broadcast(project_id: str, stage: str, percent: float, message: str) 
 
 
 # ---------------------------------------------------------------------------
-# Background cleanup task
-# ---------------------------------------------------------------------------
-
-async def _cleanup_expired_projects():
-    """Periodically check and delete projects past their 2-hour retention."""
-    while True:
-        try:
-            conn = await database._get_connection()
-            try:
-                cursor = await conn.execute(
-                    "SELECT id FROM projects WHERE expires_at < datetime('now')"
-                )
-                rows = await cursor.fetchall()
-                for row in rows:
-                    p_id = row["id"]
-                    logger.info("Deleting expired project %s", p_id)
-                    await database.delete_project(p_id)
-                    p_dir = os.path.join(TMP_DIR, p_id)
-                    if os.path.isdir(p_dir):
-                        shutil.rmtree(p_dir, ignore_errors=True)
-            finally:
-                await conn.close()
-        except Exception as e:
-            logger.error("Cleanup error: %s", e)
-        await asyncio.sleep(60 * 5) # Check every 5 minutes
-
-# ---------------------------------------------------------------------------
 # Startup event — initialise the database
 # ---------------------------------------------------------------------------
 
@@ -166,7 +137,6 @@ async def on_startup() -> None:
     await database.init_db()
     os.makedirs(TMP_DIR, exist_ok=True)
     logger.info("Database initialised, tmp dir ready at %s", TMP_DIR)
-    asyncio.create_task(_cleanup_expired_projects())
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +161,6 @@ class ProjectListItem(BaseModel):
     youtube_url: str
     status: str
     created_at: str
-    expires_at: str
     clip_count: int
 
 
@@ -221,7 +190,6 @@ class ProjectDetailResponse(BaseModel):
     youtube_url: str
     status: str
     created_at: str
-    expires_at: str
     clips: list[ClipResponse] = []
 
 
@@ -428,7 +396,6 @@ async def _run_pipeline(project_id: str, youtube_url: str) -> None:
 async def create_project(
     body: CreateProjectRequest,
     background_tasks: BackgroundTasks,
-    user_id: str = Depends(get_current_user),
 ):
     """
     Create a new project from a YouTube URL.
@@ -440,7 +407,7 @@ async def create_project(
     if not re.match(r"^(https?\:\/\/)?(www\.youtube\.com|youtu\.be)\/.+$", body.youtube_url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    result = await database.create_project(youtube_url=body.youtube_url, user_id=user_id)
+    result = await database.create_project(youtube_url=body.youtube_url)
     project_id = result["project_id"]
 
     # Fire-and-forget — runs after the response is sent
@@ -450,26 +417,26 @@ async def create_project(
 
 
 @app.get("/api/projects", response_model=list[ProjectListItem])
-async def list_projects(user_id: str = Depends(get_current_user)):
+async def list_projects():
     """Return all projects, newest first, with clip counts."""
-    return await database.get_all_projects(user_id)
+    return await database.get_all_projects()
 
 
 @app.get("/api/projects/{project_id}", response_model=ProjectDetailResponse)
-async def get_project(project_id: str, user_id: str = Depends(get_current_user)):
+async def get_project(project_id: str):
     """Get a single project by ID, including its clips."""
-    project = await database.get_project(project_id, user_id)
+    project = await database.get_project(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
 
 @app.delete("/api/projects/{project_id}")
-async def delete_project(project_id: str, user_id: str = Depends(get_current_user)):
+async def delete_project(project_id: str):
     """
     Delete a project and all of its clips (both DB rows and files).
     """
-    project = await database.get_project(project_id, user_id)
+    project = await database.get_project(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -519,7 +486,7 @@ class UpdateSettingsRequest(BaseModel):
 
 
 @app.get("/api/settings")
-async def get_settings(user_id: str = Depends(get_current_user)):
+async def get_settings():
     """
     Return all settings.  API keys are **never** returned — only a
     boolean ``has_api_key`` flag.
@@ -528,7 +495,7 @@ async def get_settings(user_id: str = Depends(get_current_user)):
 
 
 @app.post("/api/settings")
-async def update_settings(body: UpdateSettingsRequest, user_id: str = Depends(get_current_user)):
+async def update_settings(body: UpdateSettingsRequest):
     """
     Create or update one or more settings.
     """
