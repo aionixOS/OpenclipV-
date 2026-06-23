@@ -2,11 +2,10 @@ import { Project, Clip, Settings, CaptionStyle } from './types';
 
 function getBaseUrl(): string {
     if (typeof window !== 'undefined') {
-        const host = window.location.hostname;
-        if (host !== 'localhost' && host !== '127.0.0.1') {
-            return `https://${host.replace(/^(\d+)-/, '8000-')}`;
-        }
+        // In the browser, use relative paths to hit Next.js proxy rewrites
+        return "";
     }
+    // Server-side (during SSR or static generation)
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 }
 
