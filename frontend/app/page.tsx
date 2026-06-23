@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getProjects, deleteProject, createProject, getApiBaseUrl } from "@/lib/api";
+import { getProjects, deleteProject, uploadProject } from "@/lib/api";
 import { Project } from "@/lib/types";
 
 function getYouTubeThumbnail(url: string): string | null {
@@ -69,24 +69,16 @@ function DashboardContent() {
         setProjects(prev => prev.filter(p => p.id !== id));
     };
 
-    const handleQuickCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!urlInput.trim() || submitting) return;
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0] || submitting) return;
         setSubmitting(true);
         try {
-            const { project_id } = await createProject(urlInput.trim());
+            const { project_id } = await uploadProject(e.target.files[0]);
             router.push(`/project/${project_id}`);
         } catch {
             setSubmitting(false);
+            alert("Upload failed. Please try again.");
         }
-    };
-
-    const handlePaste = async () => {
-        try {
-            const text = await navigator.clipboard.readText();
-            setUrlInput(text);
-            urlRef.current?.focus();
-        } catch { /* ignore */ }
     };
 
     const filtered = projects.filter(p => {
@@ -140,25 +132,22 @@ function DashboardContent() {
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
                                 Create New Project
                             </Link>
-                            <form onSubmit={handleQuickCreate} className="flex flex-1 min-w-[280px] items-center gap-2 rounded-xl bg-black/50 px-4 py-2.5 border border-white/20 focus-within:border-primary/50 transition-all h-[50px]">
-                                <svg className="h-4 w-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            <div className="flex flex-1 min-w-[280px] items-center gap-2 rounded-xl bg-black/50 px-4 py-2.5 border border-white/20 relative h-[50px]">
+                                <svg className="h-4 w-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                <span className="flex-1 bg-transparent border-none text-sm text-slate-400 p-0 line-clamp-1">
+                                    {submitting ? "Uploading..." : "Click to select .mp4 video..."}
+                                </span>
                                 <input
-                                    ref={urlRef}
-                                    value={urlInput}
-                                    onChange={e => setUrlInput(e.target.value)}
-                                    className="flex-1 bg-transparent border-none text-sm text-white placeholder-slate-400 focus:ring-0 focus:outline-none p-0"
-                                    placeholder="Paste YouTube link..."
-                                    type="text"
+                                    type="file"
+                                    accept="video/mp4,video/quicktime"
+                                    onChange={handleFileUpload}
+                                    disabled={submitting}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                                 />
-                                <button
-                                    type="button"
-                                    onClick={handlePaste}
-                                    className="rounded-lg bg-primary/30 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/50 transition-colors uppercase tracking-wider"
-                                >
-                                    Paste
-                                </button>
-                            </form>
-                        </div>
+                                <span className="rounded-lg bg-primary/20 px-3 py-1.5 text-xs font-bold text-primary uppercase tracking-wider">
+                                    Browse
+                                </span>
+                            </div>
                     </div>
 
                     {/* Hero character */}

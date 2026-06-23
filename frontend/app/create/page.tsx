@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createProject, getProject, getSettings, saveSettings, getApiBaseUrl } from "@/lib/api";
+import { createProject, uploadProject, getProject, getSettings, saveSettings, getApiBaseUrl } from "@/lib/api";
 import { Clip, Settings } from "@/lib/types";
 import { useProjectProgress } from "@/lib/websocket";
 
@@ -34,6 +34,7 @@ export default function CreateProjectPage() {
     const [model, setModel] = useState("gpt-4o");
     const logsEndRef = useRef<HTMLDivElement>(null);
 
+    const [dragActive, setDragActive] = useState(false);
     const { stage, percent, message, logs } = useProjectProgress(projectId);
 
     useEffect(() => {
@@ -66,18 +67,48 @@ export default function CreateProjectPage() {
 
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!url.trim() || isProcessing) return;
+        // Disabled URL handling
+    };
+
+    const handleFileUpload = async (file: File) => {
+        if (isProcessing) return;
         setIsProcessing(true);
         setGeneratedClips([]);
         setApiError(null);
         setProjectId(null);
         try {
             await saveSettings({ llm_provider: provider, llm_model: model });
-            const { project_id } = await createProject(url.trim());
+            const { project_id } = await uploadProject(file);
             setProjectId(project_id);
         } catch {
-            setApiError("Something went wrong. Please try again.");
+            setApiError("Something went wrong uploading the file.");
             setIsProcessing(false);
+        }
+    };
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        if (e.target.files && e.target.files[0]) {
+            handleFileUpload(e.target.files[0]);
         }
     };
 
@@ -121,26 +152,47 @@ export default function CreateProjectPage() {
             {/* URL Input Card */}
             {!isLive && generatedClips.length === 0 && (
                 <form onSubmit={handleGenerate} className="glass-card rounded-3xl p-8 space-y-6">
-                    {/* URL Field */}
+                    {/* Notice Block */}
+                    <div className="flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3 text-sm text-blue-400">
+                        <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        YouTube URL downloads are currently being worked on. Please download the video yourself and drag and drop it here.
+                    </div>
+
+                    {/* Drag and Drop Zone */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">YouTube URL</label>
-                        <div className="flex items-center gap-2 rounded-xl glass px-4 py-3 border border-white/10 focus-within:border-primary/50 transition-all">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Upload Video</label>
+                        <div 
+                            className={`relative flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-2xl transition-all ${dragActive ? 'border-primary bg-primary/10' : 'border-white/10 hover:border-white/20 bg-slate-900/50'}`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                        >
+                            <svg className="h-10 w-10 text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <p className="text-sm font-medium text-slate-300">Drag & drop your .mp4 video here</p>
+                            <p className="text-xs text-slate-500 mt-1">or click to browse files</p>
+                            <input 
+                                type="file" 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                accept="video/mp4,video/quicktime"
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+
+                    {/* URL Field (Disabled) */}
+                    <div className="opacity-50">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">YouTube URL (Disabled)</label>
+                        <div className="flex items-center gap-2 rounded-xl glass px-4 py-3 border border-white/10 transition-all cursor-not-allowed">
                             <svg className="h-5 w-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                             <input
                                 value={url}
                                 onChange={e => setUrl(e.target.value)}
-                                className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
-                                placeholder="https://youtu.be/..."
+                                className="flex-1 bg-transparent text-sm text-slate-500 focus:outline-none cursor-not-allowed"
+                                placeholder="Temporarily disabled..."
                                 type="text"
-                                required
+                                disabled
                             />
-                            <button
-                                type="button"
-                                onClick={handlePaste}
-                                className="rounded-lg bg-primary/20 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/30 transition-colors uppercase tracking-wider"
-                            >
-                                Paste
-                            </button>
                         </div>
                     </div>
 
@@ -182,10 +234,11 @@ export default function CreateProjectPage() {
                     )}
 
                     <button
-                        type="submit"
-                        className="w-full rounded-xl bg-primary py-4 text-sm font-bold text-white glow-primary hover:bg-primary/90 transition-all"
+                        type="button"
+                        disabled
+                        className="w-full rounded-xl bg-slate-800 py-4 text-sm font-bold text-slate-500 transition-all cursor-not-allowed"
                     >
-                        Generate Clips
+                        Please Upload a File
                     </button>
                 </form>
             )}

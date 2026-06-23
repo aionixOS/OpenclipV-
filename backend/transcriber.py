@@ -202,6 +202,7 @@ async def _get_manual_captions(youtube_url: str) -> list[dict]:
     work_dir = tempfile.mkdtemp(prefix="openclip_subs_")
     output_template = os.path.join(work_dir, "%(id)s")
 
+    cookies_file = os.path.join(os.path.dirname(__file__), "cookies.txt")
     cmd = [
         _resolve_ytdlp_exe(),
         "--no-playlist",
@@ -210,13 +211,15 @@ async def _get_manual_captions(youtube_url: str) -> list[dict]:
         "--write-sub",
         "--skip-download",
         "--js-runtimes", "node",
-        "--extractor-args", "youtube:player_client=web,default",
+        "--extractor-args", "youtube:player_client=android,ios,tv",
         "--sub-format", "json3",
         "--sub-langs", "en.*,en",
         "--socket-timeout", "30",
         "-o", output_template,
         youtube_url,
     ]
+    if os.path.isfile(cookies_file):
+        cmd.extend(["--cookies", cookies_file])
 
     env = os.environ.copy()
     # Add local bin directory to PATH for bundled ffmpeg
@@ -253,6 +256,7 @@ async def _get_auto_captions(youtube_url: str) -> list[dict]:
     work_dir = tempfile.mkdtemp(prefix="openclip_subs_")
     output_template = os.path.join(work_dir, "%(id)s")
 
+    cookies_file = os.path.join(os.path.dirname(__file__), "cookies.txt")
     cmd = [
         _resolve_ytdlp_exe(),
         "--no-playlist",
@@ -261,13 +265,15 @@ async def _get_auto_captions(youtube_url: str) -> list[dict]:
         "--write-auto-sub",
         "--skip-download",
         "--js-runtimes", "node",
-        "--extractor-args", "youtube:player_client=web,default",
+        "--extractor-args", "youtube:player_client=android,ios,tv",
         "--sub-format", "json3",
         "--sub-langs", "en.*,en",
         "--socket-timeout", "30",
         "-o", output_template,
         youtube_url,
     ]
+    if os.path.isfile(cookies_file):
+        cmd.extend(["--cookies", cookies_file])
 
     env = os.environ.copy()
     # Add local bin directory to PATH for bundled ffmpeg

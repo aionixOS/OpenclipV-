@@ -95,11 +95,10 @@ def download_video(
         _resolve_ytdlp_exe(),
         "--newline",
         "--js-runtimes", "node",
-        "--extractor-args", "youtube:player_client=android,ios,web",
+        "--extractor-args", "youtube:player_client=android,ios,tv",
         # Prefer best video+audio up to 1080p, prioritise h264 (avc) codec
         # to avoid AV1/VP9 transcoding which causes Windows file-lock issues
         "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-        "--cookies", cookies_file,
         "--merge-output-format", "mp4",
         "--no-mtime",
         "--ffmpeg-location", ffmpeg_dir,
@@ -114,7 +113,7 @@ def download_video(
     ]
     
     if os.path.isfile(cookies_file):
-      cmd.extend(["--cookies", cookies_file])
+        cmd.extend(["--cookies", cookies_file])
 
 
     logger.info("Running yt-dlp: %s", " ".join(cmd))

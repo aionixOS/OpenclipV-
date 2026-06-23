@@ -111,6 +111,14 @@ async def init_db() -> None:
             except Exception:
                 pass  # column already exists — safe to ignore
 
+        # --- Migrations for projects table ---
+        for col in ("user_id", "source_type", "local_file_path"):
+            try:
+                await conn.execute(f"ALTER TABLE projects ADD COLUMN {col} TEXT")
+                await conn.commit()
+            except Exception:
+                pass
+
     except Exception as exc:
         raise RuntimeError(f"Failed to initialise database: {exc}") from exc
     finally:
@@ -121,12 +129,20 @@ async def init_db() -> None:
 # Project CRUD
 # ---------------------------------------------------------------------------
 
-async def create_project(youtube_url: str) -> dict:
+async def create_project(
+    youtube_url: str, 
+    user_id: Optional[str] = None, 
+    source_type: str = "youtube", 
+    local_file_path: Optional[str] = None
+) -> dict:
     """
     Insert a new project row and return its id + initial status.
 
     Args:
         youtube_url: The YouTube video URL to associate with this project.
+        user_id: The session ID of the user.
+        source_type: 'youtube' or 'upload'.
+        local_file_path: The local path to the uploaded file, if source_type is 'upload'.
 
     Returns:
         dict with ``project_id`` and ``status`` keys.
@@ -135,8 +151,8 @@ async def create_project(youtube_url: str) -> dict:
     conn = await _get_connection()
     try:
         await conn.execute(
-            "INSERT INTO projects (id, youtube_url) VALUES (?, ?)",
-            (project_id, youtube_url),
+            "INSERT INTO projects (id, youtube_url, user_id, source_type, local_file_path) VALUES (?, ?, ?, ?, ?)",
+            (project_id, youtube_url, user_id, source_type, local_file_path),
         )
         await conn.commit()
         ret = {"project_id": project_id, "status": "pending"}
@@ -189,29 +205,27 @@ async def update_project_title(project_id: str, title: str) -> None:
         await conn.close()
 
 
-async def get_all_projects() -> list[dict]:
+async def get_all_projects(user_id: Optional[str] = None) -> list[dict]:
     """
     Return every project, newest first, with a ``clip_count`` field.
-
-    The clip count is computed via a LEFT JOIN on the clips table so
-    that projects with zero clips are still returned.
-
-    Returns:
-        List of project dicts, each containing:
-        id, title, status, created_at, clip_count.
+    Filters by user_id if provided.
     """
     conn = await _get_connection()
     try:
-        cursor = await conn.execute(
-            """
-            SELECT p.id, p.title, p.youtube_url, p.status, p.created_at,
+        query = """
+            SELECT p.id, p.title, p.youtube_url, p.status, p.created_at, p.source_type, p.local_file_path,
                    COUNT(c.id) AS clip_count
             FROM projects p
             LEFT JOIN clips c ON c.project_id = p.id
-            GROUP BY p.id
-            ORDER BY p.created_at DESC
-            """
-        )
+        """
+        params = []
+        if user_id:
+            query += " WHERE p.user_id = ? OR p.user_id IS NULL "
+            params.append(user_id)
+            
+        query += " GROUP BY p.id ORDER BY p.created_at DESC"
+        
+        cursor = await conn.execute(query, params)
         rows = await cursor.fetchall()
         ret = [
             {
@@ -221,6 +235,8 @@ async def get_all_projects() -> list[dict]:
                 "status": row["status"],
                 "created_at": row["created_at"],
                 "clip_count": row["clip_count"],
+                "source_type": row["source_type"] if "source_type" in row.keys() else "youtube",
+                "local_file_path": row["local_file_path"] if "local_file_path" in row.keys() else None,
             }
             for row in rows
         ]
@@ -231,12 +247,13 @@ async def get_all_projects() -> list[dict]:
     return ret
 
 
-async def get_project(project_id: str) -> Optional[dict]:
+async def get_project(project_id: str, user_id: Optional[str] = None) -> Optional[dict]:
     """
     Return a single project by ID, including its list of clips.
 
     Args:
         project_id: UUID of the project to fetch.
+        user_id: The session ID of the user.
 
     Returns:
         A dict with project fields plus a ``clips`` list, or *None* if
@@ -251,6 +268,10 @@ async def get_project(project_id: str) -> Optional[dict]:
         row = await cursor.fetchone()
         if not row:
             return None
+            
+        if user_id and "user_id" in row.keys() and row["user_id"] and row["user_id"] != user_id:
+            # Not authorized
+            return None
 
         project = {
             "id": row["id"],
@@ -258,6 +279,8 @@ async def get_project(project_id: str) -> Optional[dict]:
             "youtube_url": row["youtube_url"],
             "status": row["status"],
             "created_at": row["created_at"],
+            "source_type": row["source_type"] if "source_type" in row.keys() else "youtube",
+            "local_file_path": row["local_file_path"] if "local_file_path" in row.keys() else None,
         }
 
         # Fetch associated clips

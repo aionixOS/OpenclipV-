@@ -69,22 +69,25 @@ _ENCRYPTED_KEYS = {"llm_api_key"}
 # Public API
 # ---------------------------------------------------------------------------
 
-async def get_setting(key: str) -> Optional[str]:
+async def get_setting(key: str, user_id: Optional[str] = None) -> Optional[str]:
     """
     Read a single setting by key.
+    If user_id is provided, looks for user_id:key.
 
     Encrypted keys (e.g. ``llm_api_key``) are decrypted automatically.
 
     Args:
         key: The setting key to look up.
+        user_id: The session ID of the user.
 
     Returns:
         The setting value as a string, or *None* if not set.
     """
+    db_key = f"{user_id}:{key}" if user_id else key
     conn = await database._get_connection()
     try:
         cursor = await conn.execute(
-            "SELECT value FROM settings WHERE key = ?", (key,)
+            "SELECT value FROM settings WHERE key = ?", (db_key,)
         )
         row = await cursor.fetchone()
         if not row:
@@ -101,7 +104,7 @@ async def get_setting(key: str) -> Optional[str]:
         await conn.close()
 
 
-async def set_setting(key: str, value: str) -> None:
+async def set_setting(key: str, value: str, user_id: Optional[str] = None) -> None:
     """
     Create or update a setting.
 
@@ -110,14 +113,16 @@ async def set_setting(key: str, value: str) -> None:
     Args:
         key:   The setting key.
         value: The plaintext value to store.
+        user_id: The session ID of the user.
     """
     store_value = _encrypt(value) if key in _ENCRYPTED_KEYS else value
+    db_key = f"{user_id}:{key}" if user_id else key
     conn = await database._get_connection()
     try:
         await conn.execute(
             "INSERT INTO settings (key, value) VALUES (?, ?) "
             "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-            (key, store_value),
+            (db_key, store_value),
         )
         await conn.commit()
     except Exception as exc:
@@ -126,9 +131,9 @@ async def set_setting(key: str, value: str) -> None:
         await conn.close()
 
 
-async def get_all_settings() -> Dict[str, Any]:
+async def get_all_settings(user_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    Return every setting as a flat dict.
+    Return every setting as a flat dict for a specific user.
 
     Encrypted values are **not** decrypted here — instead, encrypted
     keys are replaced with a ``has_<key>`` boolean so that the API
@@ -140,10 +145,18 @@ async def get_all_settings() -> Dict[str, Any]:
     result: Dict[str, Any] = {}
     conn = await database._get_connection()
     try:
-        cursor = await conn.execute("SELECT key, value FROM settings")
+        prefix = f"{user_id}:" if user_id else ""
+        if prefix:
+            cursor = await conn.execute("SELECT key, value FROM settings WHERE key LIKE ?", (f"{prefix}%",))
+        else:
+            # For backward compatibility or no user_id, only fetch keys without ':'
+            cursor = await conn.execute("SELECT key, value FROM settings WHERE key NOT LIKE '%:%'")
+            
         rows = await cursor.fetchall()
         for row in rows:
             k, v = row["key"], row["value"]
+            if prefix and k.startswith(prefix):
+                k = k[len(prefix):]
             if k in _ENCRYPTED_KEYS:
                 result[f"has_{k.replace('llm_', '')}"] = bool(v)
             else:

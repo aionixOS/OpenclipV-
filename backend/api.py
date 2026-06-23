@@ -38,9 +38,11 @@ from fastapi import (  # type: ignore
     HTTPException,
     BackgroundTasks,
     Header,
+    UploadFile,
+    File,
+    Form,
 )
 from fastapi.staticfiles import StaticFiles  # type: ignore
-from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from pydantic import BaseModel  # type: ignore
 from dotenv import load_dotenv  # type: ignore
 
@@ -205,7 +207,7 @@ class ProjectDetailResponse(BaseModel):
 # Background processing pipeline
 # ---------------------------------------------------------------------------
 
-async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Optional[str] = None) -> None:
+async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Optional[str] = None, user_id: Optional[str] = None) -> None:
     """
     Execute the full AI-powered pipeline in the background.
 
@@ -221,32 +223,50 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
     os.makedirs(clips_dir, exist_ok=True)
 
     try:
-        if await database.get_project(project_id) is None:
+        project = await database.get_project(project_id, user_id)
+        if project is None:
             return
 
         # Capture the running event loop for threadsafe callbacks
         loop = asyncio.get_running_loop()
+        
+        # ---- STEP 1: Download or setup local file ----
+        if project.get("source_type") == "upload":
+            file_path = project.get("local_file_path")
+            title = project.get("title") or "Uploaded Video"
+            
+            # Use ffmpeg to get duration
+            await _broadcast(project_id, "downloading", 25, "Processing uploaded file…")
+            try:
+                import subprocess
+                cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", file_path]
+                result_proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                video_duration = float(result_proc.stdout.strip())
+            except Exception as e:
+                logger.warning(f"Failed to get duration for uploaded file: {e}")
+                video_duration = 0.0
+                
+            await database.update_project_status(project_id, "downloading")
+        else:
+            await database.update_project_status(project_id, "downloading")
+            await _broadcast(project_id, "downloading", 5, "Starting download…")
 
-        # ---- STEP 1: Download ----
-        await database.update_project_status(project_id, "downloading")
-        await _broadcast(project_id, "downloading", 5, "Starting download…")
+            def download_progress(percent: float, msg: str):
+                asyncio.run_coroutine_threadsafe(
+                    _broadcast(project_id, "downloading", min(percent * 0.2 + 5, 25), msg),
+                    loop,
+                )
 
-        def download_progress(percent: float, msg: str):
-            asyncio.run_coroutine_threadsafe(
-                _broadcast(project_id, "downloading", min(percent * 0.2 + 5, 25), msg),
-                loop,
+            result = await asyncio.to_thread(
+                downloader.download_video,
+                youtube_url,
+                project_dir,
+                download_progress,
             )
 
-        result = await asyncio.to_thread(
-            downloader.download_video,
-            youtube_url,
-            project_dir,
-            download_progress,
-        )
-
-        file_path = result["file_path"]
-        title = result["title"]
-        video_duration = result["duration_seconds"]
+            file_path = result["file_path"]
+            title = result["title"]
+            video_duration = result["duration_seconds"]
 
         await database.update_project_title(project_id, title)
         await _broadcast(project_id, "downloading", 25, "Download complete")
@@ -279,9 +299,9 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
         await database.update_project_status(project_id, "analyzing")
         await _broadcast(project_id, "analyzing", 55, "AI analyzing video…")
 
-        provider = await settings_mod.get_setting("llm_provider") or "openai"
-        api_key = override_api_key or await settings_mod.get_setting("llm_api_key") or ""
-        model = await settings_mod.get_setting("llm_model") or ""
+        llm_api_key = override_api_key or await settings_mod.get_setting("llm_api_key", user_id=user_id)
+        llm_provider = await settings_mod.get_setting("llm_provider", user_id=user_id) or "openai"
+        llm_model = await settings_mod.get_setting("llm_model", user_id=user_id) or ("gpt-4o-mini" if llm_provider == "openai" else "gemini-2.5-flash")
 
         try:
             def analyze_progress(stage: str, percent: float, msg: str):
@@ -404,7 +424,8 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
 async def create_project(
     body: CreateProjectRequest,
     background_tasks: BackgroundTasks,
-    x_openai_key: Optional[str] = Header(None)
+    x_openai_key: Optional[str] = Header(None),
+    x_user_id: str = Header(...)
 ):
     """
     Create a new project from a YouTube URL.
@@ -416,36 +437,85 @@ async def create_project(
     if not re.match(r"^(https?\:\/\/)?(www\.youtube\.com|youtu\.be)\/.+$", body.youtube_url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    result = await database.create_project(youtube_url=body.youtube_url)
+    result = await database.create_project(youtube_url=body.youtube_url, user_id=x_user_id)
     project_id = result["project_id"]
 
     # Fire-and-forget — runs after the response is sent
-    background_tasks.add_task(_run_pipeline, project_id, body.youtube_url, x_openai_key)
+    background_tasks.add_task(_run_pipeline, project_id, body.youtube_url, x_openai_key, x_user_id)
 
     return {"project_id": project_id, "status": "pending"}
 
+@app.post("/api/projects/upload", response_model=CreateProjectResponse, status_code=201)
+async def upload_project(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    x_openai_key: Optional[str] = Header(None),
+    x_user_id: str = Header(...)
+):
+    """
+    Create a new project by uploading a local video file.
+    """
+    import uuid
+    import shutil
+    
+    project_id = str(uuid.uuid4())
+    project_dir = os.path.join(TMP_DIR, project_id)
+    os.makedirs(project_dir, exist_ok=True)
+    
+    # Save the uploaded file
+    file_extension = os.path.splitext(file.filename)[1] if file.filename else ".mp4"
+    local_file_path = os.path.join(project_dir, f"source{file_extension}")
+    
+    with open(local_file_path, 'wb') as out_file:
+        shutil.copyfileobj(file.file, out_file)
+
+    # Insert into DB
+    result = await database.create_project(
+        youtube_url="upload", 
+        user_id=x_user_id, 
+        source_type="upload", 
+        local_file_path=local_file_path
+    )
+    # The database create_project actually generates its own ID, so we need to rename the directory
+    # Wait, let's just use the ID generated by create_project!
+    actual_project_id = result["project_id"]
+    actual_project_dir = os.path.join(TMP_DIR, actual_project_id)
+    os.rename(project_dir, actual_project_dir)
+    
+    final_local_file_path = os.path.join(actual_project_dir, f"source{file_extension}")
+    # Update DB with the correct path
+    conn = await database._get_connection()
+    await conn.execute("UPDATE projects SET local_file_path = ?, title = ? WHERE id = ?", (final_local_file_path, file.filename or "Uploaded Video", actual_project_id))
+    await conn.commit()
+    await conn.close()
+    
+    # Fire-and-forget
+    background_tasks.add_task(_run_pipeline, actual_project_id, "upload", x_openai_key, x_user_id)
+
+    return {"project_id": actual_project_id, "status": "pending"}
+
 
 @app.get("/api/projects", response_model=list[ProjectListItem])
-async def list_projects():
+async def list_projects(x_user_id: str = Header(...)):
     """Return all projects, newest first, with clip counts."""
-    return await database.get_all_projects()
+    return await database.get_all_projects(user_id=x_user_id)
 
 
 @app.get("/api/projects/{project_id}", response_model=ProjectDetailResponse)
-async def get_project(project_id: str):
+async def get_project(project_id: str, x_user_id: str = Header(...)):
     """Get a single project by ID, including its clips."""
-    project = await database.get_project(project_id)
+    project = await database.get_project(project_id, user_id=x_user_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
 
 @app.delete("/api/projects/{project_id}")
-async def delete_project(project_id: str):
+async def delete_project(project_id: str, x_user_id: str = Header(...)):
     """
     Delete a project and all of its clips (both DB rows and files).
     """
-    project = await database.get_project(project_id)
+    project = await database.get_project(project_id, user_id=x_user_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -495,16 +565,16 @@ class UpdateSettingsRequest(BaseModel):
 
 
 @app.get("/api/settings")
-async def get_settings():
+async def get_settings(x_user_id: str = Header(...)):
     """
     Return all settings.  API keys are **never** returned — only a
     boolean ``has_api_key`` flag.
     """
-    return await settings_mod.get_all_settings()
+    return await settings_mod.get_all_settings(user_id=x_user_id)
 
 
 @app.post("/api/settings")
-async def update_settings(body: UpdateSettingsRequest):
+async def update_settings(body: UpdateSettingsRequest, x_user_id: str = Header(...)):
     """
     Create or update one or more settings.
     """
@@ -517,7 +587,7 @@ async def update_settings(body: UpdateSettingsRequest):
     }
     for key, value in pairs.items():
         if value is not None:
-            await settings_mod.set_setting(key, value)
+            await settings_mod.set_setting(key, value, user_id=x_user_id)
     return {"success": True}
 
 

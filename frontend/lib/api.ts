@@ -13,9 +13,24 @@ export function getApiBaseUrl(): string {
     return getBaseUrl();
 }
 
+export function getUserId(): string {
+    if (typeof window === 'undefined') return 'server';
+    let userId = localStorage.getItem('openclip_user_id');
+    if (!userId) {
+        userId = typeof crypto !== 'undefined' && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        localStorage.setItem('openclip_user_id', userId);
+    }
+    return userId;
+}
+
 export const getProjects = async (): Promise<Project[]> => {
     try {
-        const res = await fetch(`${getBaseUrl()}/api/projects`, { cache: 'no-store' });
+        const res = await fetch(`${getBaseUrl()}/api/projects`, { 
+            cache: 'no-store',
+            headers: { 'x-user-id': getUserId() }
+        });
         if (!res.ok) return [];
         return res.json();
     } catch {
@@ -25,7 +40,10 @@ export const getProjects = async (): Promise<Project[]> => {
 };
 
 export const getProject = async (id: string): Promise<Project & { clips: Clip[] }> => {
-    const res = await fetch(`${getBaseUrl()}/api/projects/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${getBaseUrl()}/api/projects/${id}`, { 
+        cache: 'no-store',
+        headers: { 'x-user-id': getUserId() }
+    });
     if (!res.ok) throw new Error("Project not found");
     return res.json();
 };
@@ -34,7 +52,8 @@ export const createProject = async (youtube_url: string): Promise<{ project_id: 
     const res = await fetch(`${getBaseUrl()}/api/projects`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-user-id': getUserId()
         },
         body: JSON.stringify({ youtube_url })
     });
@@ -44,14 +63,17 @@ export const createProject = async (youtube_url: string): Promise<{ project_id: 
 
 export const deleteProject = async (id: string): Promise<void> => {
     const res = await fetch(`${getBaseUrl()}/api/projects/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'x-user-id': getUserId() }
     });
     if (!res.ok) throw new Error("Failed to delete project");
 };
 
 export async function getSettings(): Promise<Settings> {
     try {
-        const res = await fetch(`${getBaseUrl()}/api/settings`);
+        const res = await fetch(`${getBaseUrl()}/api/settings`, {
+            headers: { 'x-user-id': getUserId() }
+        });
         if (!res.ok) {
             // Return default settings if backend returns error
             return {
@@ -80,7 +102,10 @@ export async function saveSettings(
 ): Promise<void> {
     const res = await fetch(`${getBaseUrl()}/api/settings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "x-user-id": getUserId()
+        },
         body: JSON.stringify(settings)
     });
     if (!res.ok) throw new Error("Failed to save settings");
@@ -88,7 +113,9 @@ export async function saveSettings(
 
 export async function getCaptionStyles(): Promise<CaptionStyle[]> {
     try {
-        const res = await fetch(`${getBaseUrl()}/api/caption-styles`);
+        const res = await fetch(`${getBaseUrl()}/api/caption-styles`, {
+            headers: { 'x-user-id': getUserId() }
+        });
         if (res.ok) return res.json();
     } catch {
     }
@@ -119,3 +146,19 @@ export async function getCaptionStyles(): Promise<CaptionStyle[]> {
         }
     ];
 }
+
+export const uploadProject = async (file: File): Promise<{ project_id: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const res = await fetch(`${getBaseUrl()}/api/projects/upload`, {
+        method: 'POST',
+        headers: {
+            'x-user-id': getUserId()
+            // Do not set Content-Type for FormData, browser will set it with boundary
+        },
+        body: formData
+    });
+    if (!res.ok) throw new Error("Failed to upload project");
+    return res.json();
+};

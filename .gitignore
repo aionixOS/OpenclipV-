@@ -4,3 +4,4 @@ cookies.txt
 tmp/
 data/
 backend/bin/
+__pycache__
