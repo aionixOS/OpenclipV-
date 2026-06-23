@@ -398,76 +398,80 @@ async def _get_vosk_transcript(
             
         SetLogLevel(-1) # Disable verbose vosk logs
         
-        # Download model if not exists
-        model_name = "vosk-model-small-en-us-0.15"
-        model_path = os.path.join(os.path.dirname(__file__), model_name)
-        if not os.path.exists(model_path):
-            import urllib.request
-            import zipfile
-            url = f"https://alphacephei.com/vosk/models/{model_name}.zip"
-            logger.info(f"Downloading VOSK model from {url}...")
-            zip_path = model_path + ".zip"
-            urllib.request.urlretrieve(url, zip_path)
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(os.path.dirname(__file__))
-            os.remove(zip_path)
-            logger.info("VOSK model downloaded and extracted.")
-
-        model = Model(model_path)
-        
-        import tempfile
-        import wave
-        
-        fd, wav_path = tempfile.mkstemp(suffix=".wav")
-        os.close(fd)
-        
         try:
-            # Extract audio to 16kHz mono wav
-            ffmpeg_path = os.path.expandvars(
-                r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffmpeg.exe"
-            )
-            if not os.path.exists(ffmpeg_path):
-                ffmpeg_path = "ffmpeg"
+            # Download model if not exists
+            model_name = "vosk-model-small-en-us-0.15"
+            model_path = os.path.join(os.path.dirname(__file__), model_name)
+            if not os.path.exists(model_path):
+                import urllib.request
+                import zipfile
+                url = f"https://alphacephei.com/vosk/models/{model_name}.zip"
+                logger.info(f"Downloading VOSK model from {url}...")
+                zip_path = model_path + ".zip"
+                urllib.request.urlretrieve(url, zip_path)
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(os.path.dirname(__file__))
+                os.remove(zip_path)
+                logger.info("VOSK model downloaded and extracted.")
 
-            cmd = [
-                ffmpeg_path, "-y", "-i", video_path,
-                "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", wav_path
-            ]
-            subprocess.run(cmd, capture_output=True, check=True)
+            model = Model(model_path)
             
-            wf = wave.open(wav_path, "rb")
-            rec = KaldiRecognizer(model, wf.getframerate())
-            rec.SetWords(True)
+            import tempfile
+            import wave
             
-            segments = []
+            fd, wav_path = tempfile.mkstemp(suffix=".wav")
+            os.close(fd)
             
-            while True:
-                data = wf.readframes(4000)
-                if len(data) == 0:
-                    break
-                if rec.AcceptWaveform(data):
-                    res = json.loads(rec.Result())
-                    if "result" in res and res.get("text", "").strip():
-                        # Group words into a segment
-                        start = res["result"][0]["start"]
-                        end = res["result"][-1]["end"]
-                        text = res["text"]
-                        segments.append({"start": float(start), "end": float(end), "text": text.strip()})
-            
-            final_res = json.loads(rec.FinalResult())
-            if "result" in final_res and final_res.get("text", "").strip():
-                start = final_res["result"][0]["start"]
-                end = final_res["result"][-1]["end"]
-                text = final_res["text"]
-                segments.append({"start": float(start), "end": float(end), "text": text.strip()})
+            try:
+                # Extract audio to 16kHz mono wav
+                ffmpeg_path = os.path.expandvars(
+                    r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffmpeg.exe"
+                )
+                if not os.path.exists(ffmpeg_path):
+                    ffmpeg_path = "ffmpeg"
+
+                cmd = [
+                    ffmpeg_path, "-y", "-i", video_path,
+                    "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", wav_path
+                ]
+                subprocess.run(cmd, capture_output=True, check=True)
                 
-            return segments
-        finally:
-            if os.path.exists(wav_path):
-                try:
-                    os.remove(wav_path)
-                except OSError:
-                    pass
+                wf = wave.open(wav_path, "rb")
+                rec = KaldiRecognizer(model, wf.getframerate())
+                rec.SetWords(True)
+                
+                segments = []
+                
+                while True:
+                    data = wf.readframes(4000)
+                    if len(data) == 0:
+                        break
+                    if rec.AcceptWaveform(data):
+                        res = json.loads(rec.Result())
+                        if "result" in res and res.get("text", "").strip():
+                            # Group words into a segment
+                            start = res["result"][0]["start"]
+                            end = res["result"][-1]["end"]
+                            text = res["text"]
+                            segments.append({"start": float(start), "end": float(end), "text": text.strip()})
+                
+                final_res = json.loads(rec.FinalResult())
+                if "result" in final_res and final_res.get("text", "").strip():
+                    start = final_res["result"][0]["start"]
+                    end = final_res["result"][-1]["end"]
+                    text = final_res["text"]
+                    segments.append({"start": float(start), "end": float(end), "text": text.strip()})
+                    
+                return segments
+            finally:
+                if 'wav_path' in locals() and os.path.exists(wav_path):
+                    try:
+                        os.remove(wav_path)
+                    except OSError:
+                        pass
+        except Exception as e:
+            logger.error(f"VOSK transcription failed: {e}")
+            return []
 
     segments: list[dict] = await asyncio.to_thread(_do_transcribe)  # type: ignore
     logger.info("VOSK produced %d segments", len(segments))
