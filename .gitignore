@@ -1,0 +1,6 @@
+cookies.json
+cookies.txt
+*.temp.*
+tmp/
+data/
+backend/bin/
