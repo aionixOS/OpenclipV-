@@ -477,7 +477,7 @@ async def _call_gemini(prompt: str, api_key: str, model: str) -> str:
             from google import genai
             from google.genai import types
         except ImportError as exc:
-            raise RuntimeError(
+            raise NonRetryableError(
                 "Gemini SDK missing. Install with: pip install google-genai"
             ) from exc
 
@@ -486,7 +486,7 @@ async def _call_gemini(prompt: str, api_key: str, model: str) -> str:
             import os
             effective_api_key = os.environ.get("GEMINI_API_KEY", "")
         if not effective_api_key:
-            raise RuntimeError("Gemini API key missing. Set it in Settings or GEMINI_API_KEY env var.")
+            raise NonRetryableError("Gemini API key missing. Set it in Settings or GEMINI_API_KEY env var.")
 
         # Create client with explicit timeout via http_options
         client = genai.Client(

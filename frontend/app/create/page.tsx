@@ -59,8 +59,9 @@ export default function CreateProjectPage() {
                 .catch(() => { setApiError("Failed to load clips."); setIsProcessing(false); });
         } else if (stage === "error") {
             setIsProcessing(false);
+            setApiError(message || "Processing failed with an unknown error.");
         }
-    }, [stage, projectId]);
+    }, [stage, message, projectId]);
 
     const handlePaste = async () => {
         try { setUrl(await navigator.clipboard.readText()); } catch { /* ignore */ }
