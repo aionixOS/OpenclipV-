@@ -3,7 +3,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from datetime import datetime, timezone
 
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb+srv://Aionixos:Allowed@botdb.ppc3ixq.mongodb.net/Openclip?retryWrites=true&w=majority")
+MONGODB_URI = os.getenv("MONGODB_URI")
+if not MONGODB_URI:
+    raise RuntimeError("MONGODB_URI environment variable is not set")
+
 client = AsyncIOMotorClient(MONGODB_URI)
 # Note: Ensure the DB name matches what NextAuth creates
 db = client.get_database("Openclip")
