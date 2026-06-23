@@ -159,6 +159,16 @@ export const uploadProject = async (file: File): Promise<{ project_id: string }>
         },
         body: formData
     });
-    if (!res.ok) throw new Error("Failed to upload project");
+    if (!res.ok) {
+        let errMsg = "Failed to upload project";
+        try {
+            const errData = await res.json();
+            errMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail || errData);
+        } catch {
+            const text = await res.text().catch(() => "");
+            if (text) errMsg = text;
+        }
+        throw new Error(errMsg);
+    }
     return res.json();
 };

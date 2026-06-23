@@ -80,8 +80,8 @@ export default function CreateProjectPage() {
             await saveSettings({ llm_provider: provider, llm_model: model });
             const { project_id } = await uploadProject(file);
             setProjectId(project_id);
-        } catch {
-            setApiError("Something went wrong uploading the file.");
+        } catch (err: any) {
+            setApiError(err.message || "Something went wrong uploading the file.");
             setIsProcessing(false);
         }
     };
@@ -227,9 +227,23 @@ export default function CreateProjectPage() {
                     </div>
 
                     {apiError && (
-                        <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
-                            <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
-                            {apiError}
+                        <div className="flex flex-col gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                                    <span className="font-bold">Upload Failed</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => navigator.clipboard.writeText(apiError)}
+                                    className="text-xs bg-red-500/20 hover:bg-red-500/30 px-2 py-1 rounded transition-colors text-red-300 font-bold"
+                                >
+                                    Copy Error
+                                </button>
+                            </div>
+                            <pre className="mt-1 p-3 bg-red-950/50 rounded overflow-x-auto whitespace-pre-wrap font-mono text-xs border border-red-500/10">
+                                {apiError}
+                            </pre>
                         </div>
                     )}
 
