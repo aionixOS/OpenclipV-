@@ -166,7 +166,7 @@ export default function CreateProjectPage() {
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Model</label>
                             <input
-                                value={model}
+                                value={model || ""}
                                 onChange={e => setModel(e.target.value)}
                                 className="w-full rounded-xl bg-slate-900/50 border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-primary focus:outline-none transition-all"
                                 placeholder="gpt-4o"
