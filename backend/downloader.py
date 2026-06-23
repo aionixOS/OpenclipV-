@@ -117,74 +117,94 @@ def download_video(
     bin_dir = os.path.join(backend_dir, "bin")
     env["PATH"] = env.get("PATH", "") + os.pathsep + bin_dir
     
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        env=env,
-    )
+    try:
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+        )
 
-    # Regex to match lines like:  [download]  45.2% of ~50.00MiB …
-    progress_re = re.compile(r"\[download\]\s+([\d.]+)%")
+        progress_re = re.compile(r"\[download\]\s+([\d.]+)%")
+        stdout = process.stdout
+        output_lines = []
+        if stdout is not None:
+            for line in stdout:
+                output_lines.append(line)
+                line = line.strip()
+                if not line:
+                    continue
 
-    stdout = process.stdout
-    output_lines = []
-    if stdout is not None:
-        for line in stdout:
-            output_lines.append(line)
-            line = line.strip()
-            if not line:
-                continue
+                logger.debug("yt-dlp: %s", line)
 
-            logger.debug("yt-dlp: %s", line)
+                match = progress_re.search(line)
+                if match:
+                    percent = float(match.group(1))
+                    cb = progress_callback
+                    if cb is not None:
+                        cb(percent, f"Downloading: {percent:.1f}%")
 
-            match = progress_re.search(line)
-            if match:
-                percent = float(match.group(1))
-                cb = progress_callback
-                if cb is not None:
-                    cb(percent, f"Downloading: {percent:.1f}%")
+        process.wait()
 
-    process.wait()
+        # Longer delay to let Windows release file handles after merge
+        time.sleep(3)
 
-    # Longer delay to let Windows release file handles after merge
-    time.sleep(3)
-
-    if process.returncode != 0:
-        # Check if the file was actually created despite the error
-        # (common on Windows: merge succeeds but temp file rename fails due to lock)
-        # Try waiting a bit more and check for temp files to rename
-        for retry in range(3):
-            downloaded_files = glob.glob(os.path.join(output_dir, "*.mp4"))
-            temp_files = glob.glob(os.path.join(output_dir, "*.temp.mp4"))
-            if downloaded_files:
-                break
-            # Try renaming temp files manually if they exist
-            if temp_files:
-                for tf in temp_files:
-                    final_name = tf.replace(".temp.mp4", ".mp4")
-                    try:
-                        os.rename(tf, final_name)
-                        logger.info("Manually renamed temp file: %s -> %s", tf, final_name)
-                    except OSError:
-                        pass
+        if process.returncode != 0:
+            for retry in range(3):
                 downloaded_files = glob.glob(os.path.join(output_dir, "*.mp4"))
+                temp_files = glob.glob(os.path.join(output_dir, "*.temp.mp4"))
                 if downloaded_files:
                     break
-            time.sleep(2)
+                if temp_files:
+                    for tf in temp_files:
+                        final_name = tf.replace(".temp.mp4", ".mp4")
+                        try:
+                            os.rename(tf, final_name)
+                            logger.info("Manually renamed temp file: %s -> %s", tf, final_name)
+                        except OSError:
+                            pass
+                    downloaded_files = glob.glob(os.path.join(output_dir, "*.mp4"))
+                    if downloaded_files:
+                        break
+                time.sleep(2)
 
-        downloaded_files = glob.glob(os.path.join(output_dir, "*.mp4"))
-        if downloaded_files:
-            logger.warning("yt-dlp exited with code %d but MP4 file exists, continuing...", process.returncode)
-        else:
-            with open("ytdlp_error.txt", "w") as f:
-                f.writelines(output_lines)
-            raise RuntimeError(
-                f"yt-dlp exited with code {process.returncode} for URL: {url}"
-            )
+            downloaded_files = glob.glob(os.path.join(output_dir, "*.mp4"))
+            if downloaded_files:
+                logger.warning("yt-dlp exited with code %d but MP4 file exists, continuing...", process.returncode)
+            else:
+                with open("ytdlp_error.txt", "w") as f:
+                    f.writelines(output_lines)
+                raise RuntimeError(f"yt-dlp failed (code {process.returncode})")
+
+    except Exception as e:
+        logger.error(f"yt-dlp failed: {e}. Falling back to pytubefix...")
+        if progress_callback:
+            progress_callback(10.0, "yt-dlp blocked. Falling back to alternative downloader...")
+            
+        try:
+            from pytubefix import YouTube
+            def _on_progress(stream, chunk, bytes_remaining):
+                total = stream.filesize
+                bytes_downloaded = total - bytes_remaining
+                percent = (bytes_downloaded / total) * 100
+                if progress_callback:
+                    progress_callback(percent, f"Downloading: {percent:.1f}%")
+
+            yt = YouTube(url, on_progress_callback=_on_progress, client='WEB')
+            stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+            if not stream:
+                raise RuntimeError("No suitable stream found with pytubefix")
+            
+            stream.download(output_path=output_dir)
+            # Short sleep to ensure file flush
+            time.sleep(1)
+            
+        except Exception as pytube_exc:
+            logger.error("pytubefix also failed: %s", str(pytube_exc))
+            raise RuntimeError("Both yt-dlp and pytubefix failed to download the video.") from pytube_exc
 
     # Locate the downloaded file
     downloaded_files = glob.glob(os.path.join(output_dir, "*.mp4"))
@@ -195,11 +215,22 @@ def download_video(
     file_path = max(downloaded_files, key=os.path.getmtime)
     file_path = os.path.abspath(file_path)
 
-    # Fetch the video title
-    title = _get_video_title(url) or os.path.splitext(os.path.basename(file_path))[0]
-
-    # Fetch the duration via ffprobe
-    duration = _get_duration(file_path)
+    # Fetch the video title and duration
+    title = None
+    duration = None
+    
+    try:
+        # If pytubefix was used, yt will be in locals
+        if 'yt' in locals():
+            title = yt.title
+            duration = yt.length
+    except:
+        pass
+        
+    if not title:
+        title = _get_video_title(url) or os.path.splitext(os.path.basename(file_path))[0]
+    if not duration:
+        duration = _get_duration(file_path)
 
     logger.info("Download complete: %s (%.1fs)", file_path, duration)
 
