@@ -152,7 +152,7 @@ export default function SettingsPage() {
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Model Name</label>
                                         <input
-                                            value={model}
+                                            value={model || ""}
                                             onChange={e => setModel(e.target.value)}
                                             className="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:border-primary focus:outline-none transition-all text-sm"
                                             placeholder="gpt-4o-mini"
