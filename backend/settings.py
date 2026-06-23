@@ -164,6 +164,8 @@ async def get_all_settings(user_id: Optional[str] = None) -> Dict[str, Any]:
 
         if "caption_style" not in result:
             result["caption_style"] = "viral_word"
+        if "has_api_key" not in result:
+            result["has_api_key"] = False
 
     except Exception as exc:
         raise RuntimeError(f"Failed to read settings: {exc}") from exc
