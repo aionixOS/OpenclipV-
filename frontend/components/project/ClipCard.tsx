@@ -61,7 +61,7 @@ export function ClipCard({ clip, baseUrl }: ClipCardProps) {
                                 clip.viral_score >= 5 ? "text-yellow-500" :
                                     "text-gray-500"
                             }`}>
-                            {clip.viral_score >= 8 ? "� " : clip.viral_score >= 5 ? "⚡ " : ""}
+                            {clip.viral_score >= 8 ? "🔥 " : clip.viral_score >= 5 ? "⚡ " : ""}
                             Viral score: {clip.viral_score}/10
                         </div>
                     )}
@@ -118,4 +118,3 @@ export function ClipCard({ clip, baseUrl }: ClipCardProps) {
         </div>
     );
 }
-�

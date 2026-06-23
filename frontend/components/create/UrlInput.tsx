@@ -35,7 +35,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
     const isValid = isValidYoutubeUrl(url);
 
     return (
-        <div className="w-full max-w-2xl mx-auto"></div>
+        <div className="w-full max-w-2xl mx-auto">
             <form onSubmit={handleSubmit} className="relative">
                 <div className="relative flex items-center">
                     <LinkIcon className="absolute left-4 h-5 w-5 text-gray-400" />

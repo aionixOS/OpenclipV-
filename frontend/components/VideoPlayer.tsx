@@ -29,7 +29,7 @@ export default function VideoPlayer({ url }: VideoPlayerProps) {
     const videoId = extractVideoId(url);
 
     if (!videoId) {
-        return <p></p>Unable to embed video.</p>;
+        return <p>Unable to embed video.</p>;
     }
 
     return (

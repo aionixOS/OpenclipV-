@@ -5,11 +5,11 @@ import { AlertTriangle, ArrowRight } from "lucide-react";
 
 export function SettingsWarning() {
     return (
-        <div className="w-full max-w-2xl mx-auto mb-6 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4 animate-in fade-in slide-in-from-top-2"></div>
+        <div className="w-full max-w-2xl mx-auto mb-6 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-4 animate-in fade-in slide-in-from-top-2">
             <div className="flex items-start md:items-center justify-between gap-4 flex-col md:flex-row">
-                <div className="flex items-center gap-3 text-yellow-500">0">
-                    <AlertTriangle className="h-5 w-5 flex-shrink-0" />>
-                    <div></div>
+                <div className="flex items-center gap-3 text-yellow-500">
+                    <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+                    <div>
                         <p className="font-semibold text-sm">No LLM configured</p>
                         <p className="text-xs text-yellow-500/80">AI clip detection requires an API key.</p>
                     </div>

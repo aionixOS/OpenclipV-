@@ -24,7 +24,7 @@ export function ProgressBar({ stage, percent, visible = true }: ProgressBarProps
     const currentConfig = stageConfig[stage] || { label: stage || "Processing...", color: "var(--accent)" };
 
     return (
-        <div className="w-full max-w-2xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500"></div>
+        <div className="w-full max-w-2xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-end mb-2">
                 <span className="text-sm font-medium text-[var(--foreground)]">
                     {currentConfig.label}

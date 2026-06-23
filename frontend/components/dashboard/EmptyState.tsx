@@ -3,8 +3,8 @@ import { Plus, Video } from "lucide-react";
 
 export function EmptyState() {
     return (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] p-12 text-center mt-8"></div>
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--background)] mb-4 shadow-sm border border-[var(--border)]">order)]">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] p-12 text-center mt-8">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--background)] mb-4 shadow-sm border border-[var(--border)]">
                 <Video className="h-10 w-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold mb-2 text-[var(--foreground)]">No projects yet</h3>

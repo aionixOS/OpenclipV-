@@ -32,7 +32,7 @@ export default function ProjectPage() {
 
     const [project, setProject] = useState<(Project & { clips: Clip[] }) | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null></string>(null);
+    const [error, setError] = useState<string | null>(null);
     const [selectedClip, setSelectedClip] = useState<Clip | null>(null);
     const [wsProgress, setWsProgress] = useState<{ stage: string; percent: number; message: string } | null>(null);
     const [logs, setLogs] = useState<string[]>([]);

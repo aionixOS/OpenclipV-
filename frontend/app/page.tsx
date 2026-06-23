@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getProjects, deleteProject, createProject, getApiBaseUrl } from "@/lib/api";
@@ -37,14 +37,14 @@ function StatusBadge({ status }: { status: Project["status"] }) {
     };
     const c = cfg[status] || cfg.pending;
     return (
-        <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md ${c.cls}`}></span>
-            {c.pulse && <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" /nt animate-pulse" />}
+        <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md ${c.cls}`}>
+            {c.pulse && <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />}
             {c.label}
         </span>
     );
 }
 
-export default function Dashboard() {
+function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const searchQuery = searchParams.get("q") || "";
@@ -53,7 +53,7 @@ export default function Dashboard() {
     const [filter, setFilter] = useState<"all" | "processing" | "done" | "error">("all");
     const [urlInput, setUrlInput] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const urlRef = useRef<HTMLInputElement></HTMLInputElement>(null);
+    const urlRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         getProjects()
@@ -295,5 +295,13 @@ export default function Dashboard() {
             )}
 
         </div>
+    );
+}
+
+export default function Dashboard() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center text-white">Loading Dashboard...</div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

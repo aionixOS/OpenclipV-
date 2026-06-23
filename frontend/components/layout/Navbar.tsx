@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 
-export function Navbar() {
+function NavbarContent() {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -62,5 +62,13 @@ export function Navbar() {
                 </div>
             </div>
         </header>
+    );
+}
+
+export function Navbar() {
+    return (
+        <Suspense fallback={<div className="h-16 glass-dark w-full" />}>
+            <NavbarContent />
+        </Suspense>
     );
 }

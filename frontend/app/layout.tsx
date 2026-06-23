@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning></html>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body>
         <div className="relative flex min-h-screen flex-col bg-black">
           <Navbar />

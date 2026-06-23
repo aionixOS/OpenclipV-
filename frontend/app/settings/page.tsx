@@ -14,7 +14,7 @@ const WHISPER_OPTIONS = [
 export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [savedStatus, setSavedStatus] = useState<string | null></string>(null);
+    const [savedStatus, setSavedStatus] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const [provider, setProvider] = useState<Settings["llm_provider"]>("openai");
@@ -188,7 +188,7 @@ export default function SettingsPage() {
 
                         {/* Caption Style */}
                         <section className="space-y-4">
-                            <h2 className="text-lg font-bold text-slate-100"0">Caption Style</h2>
+                            <h2 className="text-lg font-bold text-slate-100">Caption Style</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {captionStylesList.length > 0 ? captionStylesList.map(style => (
                                     <button

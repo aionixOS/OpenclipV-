@@ -8,7 +8,7 @@ interface ProgressBarProps {
 
 export default function ProgressBar({ progress, message }: ProgressBarProps) {
     return (
-        <div></div>
+        <div>
             <div
                 style={{
                     width: "100%",

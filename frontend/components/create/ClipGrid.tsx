@@ -12,7 +12,7 @@ interface ClipGridProps {
 export function ClipGrid({ clips, baseUrl, loading = false }: ClipGridProps) {
     if (loading) {
         return (
-            <div className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700"></div>
+            <div className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-[var(--foreground)]">
                     Generating Clips
                 </h2>

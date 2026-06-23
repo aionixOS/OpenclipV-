@@ -27,7 +27,7 @@ export default function CreateProjectPage() {
     const [url, setUrl] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [generatedClips, setGeneratedClips] = useState<Clip[]>([]);
-    const [projectId, setProjectId] = useState<string | null></string>(null);
+    const [projectId, setProjectId] = useState<string | null>(null);
     const [apiError, setApiError] = useState<string | null>(null);
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
     const [provider, setProvider] = useState<Settings["llm_provider"]>("openai");
