@@ -4,4 +4,10 @@ cookies.txt
 tmp/
 data/
 backend/bin/
-__pycache__
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+backend/*.txt
+*.log

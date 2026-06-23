@@ -148,6 +148,7 @@ function DashboardContent() {
                                     Browse
                                 </span>
                             </div>
+                        </div>
                     </div>
 
                     {/* Hero character */}
