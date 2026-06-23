@@ -193,7 +193,7 @@ def download_video(
                 if progress_callback:
                     progress_callback(percent, f"Downloading: {percent:.1f}%")
 
-            yt = YouTube(url, on_progress_callback=_on_progress, client='WEB')
+            yt = YouTube(url, on_progress_callback=_on_progress, client='WEB', use_po_token=True)
             stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
             if not stream:
                 raise RuntimeError("No suitable stream found with pytubefix")
