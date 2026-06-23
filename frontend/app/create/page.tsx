@@ -232,7 +232,7 @@ export default function CreateProjectPage() {
                             {[
                                 { label: "Stage", val: stage || "—" },
                                 { label: "Progress", val: `${Math.round(clampedPercent)}%` },
-                                { label: "Engine", val: provider.toUpperCase() },
+                                { label: "Engine", val: (provider || "openai").toUpperCase() },
                                 { label: "Model", val: model },
                             ].map(({ label, val }) => (
                                 <div key={label}>
