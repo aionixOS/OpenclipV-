@@ -318,12 +318,16 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
 
         except Exception as e:
             msg = str(e).lower()
-            if "401" in msg or "403" in msg:
-                err_msg = "Invalid API key. Check your settings."
-            elif "429" in msg:
-                err_msg = "Rate limit hit. Wait a moment and try again."
+            if "nonretryableerror" in msg or "api error" in msg or "400" in msg or "401" in msg or "403" in msg or "404" in msg:
+                err_msg = f"Configuration Error (User Fault): {e}"
+            elif "429" in msg or "rate limit" in msg or "quota" in msg:
+                err_msg = f"Quota/Rate Limit Error (User Fault): You have hit the rate limit for your API key. Details: {e}"
             else:
-                err_msg = f"AI Error: {e}"
+                err_msg = f"AI Service Error: {e}"
+            
+            # Extract the actual message if it's wrapped in NonRetryableError
+            if "NonRetryableError: " in err_msg:
+                err_msg = err_msg.replace("NonRetryableError: ", "")
             await database.update_project_status(project_id, "error")
             await _broadcast(project_id, "error", 0, err_msg)
             return
