@@ -16,7 +16,7 @@
 
 ## � About the Creator
 
-Hey — I'm **AIONIX**, a **17-year-old** builder who is obsessed with AI and machine learning.
+Hey — I'm **AIONIX**, a builder who is obsessed with AI and machine learning.
 
 I'm on a mission to prove that powerful tools shouldn't cost money. OpenClip is my first major open-source project — built not by a team, not by a funded startup, but by a teenager with a laptop, a vision, and a lot of caffeine.
 
