@@ -46,7 +46,7 @@ OpenClip is a **free, open-source, local-first** alternative to paid video clipp
 
 | Layer            | Tool                           |
 |------------------|--------------------------------|
-| YouTube Download | yt-dlp (CLI)                   |
+| YouTube Download | yt-dlp + pytubefix (Fallback)  |
 | Video Cutting    | FFmpeg (direct CLI subprocess) |
 | Layout Detect    | Pillow / numpy                 |
 | Face Tracking    | MediaPipe (Tasks API)          |
@@ -153,7 +153,15 @@ This will start:
 ✅ Save project + rich clip metadata to SQLite
 ✅ Display clips in View Project screen
 ✅ Show history on Dashboard
-✅ Real-time progress via WebSocket
+✅ Real-time progress via WebSocket / HTTP Polling
+
+---
+
+## 🚀 Recent Updates
+
+- **Browser-Side API Keys:** Your LLM API keys are now stored securely in your browser's `localStorage`. They never touch the backend database, making this safe to host publicly.
+- **YouTube Bot Bypass:** Added `pytubefix` as an automated fallback to bypass YouTube's aggressive "Sign in to prove you're not a bot" datacenter blocks (PO Token support enabled).
+- **Vercel Compatibility:** The real-time progress tracker now seamlessly falls back to fast HTTP Polling if Vercel's Edge network blocks the WebSocket connection.
 
 ---
 
@@ -192,10 +200,10 @@ FFmpeg, yt-dlp, Python, Node — all free.
 
 **Q2. Where is my data stored?**
 ```
-Everything stays on your computer. Nothing goes to any cloud.
+Everything stays under your control.
   Videos    → /tmp folder on your machine
   Database  → /data/openclip.db (SQLite file)
-  Settings  → same SQLite file, API keys encrypted
+  Settings  → API Keys are stored strictly in your browser's LocalStorage!
   Clips     → /tmp/{project_id}/clips/
 
 The only external calls are:
@@ -213,8 +221,8 @@ The only external calls are:
 4. Paste your API key
 5. Click Save
 
-Your key is encrypted and stored locally.
-It never leaves your machine except to call the LLM API.
+Your key is stored purely in your browser's `localStorage` cache.
+It is completely isolated to your device and never hits the server database!
 ```
 
 ---
