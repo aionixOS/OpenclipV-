@@ -434,7 +434,7 @@ async def _get_vosk_transcript(
                     ffmpeg_path, "-y", "-i", video_path,
                     "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", wav_path
                 ]
-                await asyncio.to_thread(subprocess.run, cmd, capture_output=True, check=True)
+                subprocess.run(cmd, capture_output=True, check=True)
                 
                 wf = wave.open(wav_path, "rb")
                 rec = KaldiRecognizer(model, wf.getframerate())
