@@ -32,6 +32,8 @@ pip install -r requirements.txt
 # 4. Stop any existing running server
 echo "🛑 Stopping any existing server instances..."
 pkill -f "uvicorn api:app" || true
+fuser -k 8000/tcp || true
+sleep 2
 
 # 5. Start the server
 echo "🟢 Starting the FastAPI server..."
