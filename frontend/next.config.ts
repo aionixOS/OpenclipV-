@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
       {
         source: '/data/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/data/:path*`,
+      },
+      {
+        source: '/files/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/files/:path*`,
       }
     ]
   },

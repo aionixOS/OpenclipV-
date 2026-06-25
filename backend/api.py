@@ -109,6 +109,7 @@ app.mount("/files", StaticFiles(directory=TMP_DIR), name="files")
 
 _ws_connections: dict[str, set[WebSocket]] = {}
 _progress_state: dict[str, dict] = {}
+pipeline_lock = asyncio.Lock()
 
 
 async def _broadcast(project_id: str, stage: str, percent: float, message: str) -> None:
@@ -223,6 +224,10 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
     clips_dir = os.path.join(project_dir, "clips")
     os.makedirs(clips_dir, exist_ok=True)
 
+    if pipeline_lock.locked():
+        await _broadcast(project_id, "queued", 0, "Waiting in queue for previous task to finish...")
+        
+    await pipeline_lock.acquire()
     try:
         project = await database.get_project(project_id, user_id)
         if project is None:
@@ -437,6 +442,8 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
         await _broadcast(
             project_id, "error", 0, f"Pipeline error: {exc}"
         )
+    finally:
+        pipeline_lock.release()
 
 
 # ---------------------------------------------------------------------------
