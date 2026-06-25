@@ -47,6 +47,9 @@ def get_video_duration(file_path: str) -> float:
     ffprobe_path = os.path.expandvars(
         r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffprobe.exe"
     )
+    if not os.path.exists(ffprobe_path):
+        ffprobe_path = "ffprobe"
+        
     cmd = [
         ffprobe_path,
         "-v", "quiet",
@@ -109,6 +112,9 @@ def cut_clip(
     ffmpeg_path = os.path.expandvars(
         r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffmpeg.exe"
     )
+    if not os.path.exists(ffmpeg_path):
+        ffmpeg_path = "ffmpeg"
+        
     cmd = [
         ffmpeg_path,
         "-y",                  # overwrite without asking

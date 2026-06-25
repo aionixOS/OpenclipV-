@@ -429,6 +429,8 @@ async def _burn_ass_to_video(input_path: str, ass_path: str, output_path: str) -
     ffmpeg_path = os.path.expandvars(
         r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffmpeg.exe"
     )
+    if not os.path.exists(ffmpeg_path):
+        ffmpeg_path = "ffmpeg"
     cmd = [
         ffmpeg_path, "-i", input_path,
         "-vf", f"ass='{safe_ass_path}'",
