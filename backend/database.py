@@ -415,6 +415,24 @@ async def delete_project(project_id: str) -> None:
         await conn.commit()
     except Exception as exc:
         raise RuntimeError(f"Failed to delete project: {exc}") from exc
+
+
+async def get_expired_projects(hours: int = 2) -> list[str]:
+    """
+    Return a list of project IDs that were created more than `hours` ago.
+    """
+    conn = await _get_connection()
+    try:
+        # SQLite datetime('now', '-X hours') uses UTC, which matches CURRENT_TIMESTAMP
+        cursor = await conn.execute(
+            "SELECT id FROM projects WHERE created_at < datetime('now', ?)",
+            (f"-{hours} hours",)
+        )
+        rows = await cursor.fetchall()
+        return [row[0] for row in rows]
+    except Exception as exc:
+        logger.error(f"Failed to fetch expired projects: {exc}")
+        return []
     finally:
         await conn.close()
 

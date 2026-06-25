@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CountdownTimer } from "@/components/CountdownTimer";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getProject, getApiBaseUrl } from "@/lib/api";
@@ -103,7 +104,8 @@ export default function ProjectPage() {
                         </div>
                         <h1 className="text-2xl font-bold text-white">{project.title || "Untitled Project"}</h1>
                     </div>
-                    <div className="flex gap-3 flex-shrink-0">
+                    <div className="flex gap-3 flex-shrink-0 items-center">
+                        <CountdownTimer createdAt={project.created_at} hoursUntilExpire={2} onExpire={() => window.location.href = '/'} />
                         <Link href="/" className="px-4 py-2 rounded-xl glass glass-hover text-sm font-semibold flex items-center gap-2 text-slate-300">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                             Dashboard

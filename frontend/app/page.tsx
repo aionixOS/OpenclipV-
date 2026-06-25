@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getProjects, deleteProject, uploadProject } from "@/lib/api";
 import { Project } from "@/lib/types";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 function getYouTubeThumbnail(url: string): string | null {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
@@ -231,7 +232,8 @@ function DashboardContent() {
                                             <svg className="h-10 w-10 text-primary/40" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                         </div>
                                     )}
-                                    <div className="absolute top-3 right-3">
+                                    <div className="absolute top-3 right-3 flex items-center gap-2">
+                                        <CountdownTimer createdAt={project.created_at} hoursUntilExpire={2} />
                                         <StatusBadge status={project.status} />
                                     </div>
                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">

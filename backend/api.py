@@ -139,6 +139,31 @@ async def _broadcast(project_id: str, stage: str, percent: float, message: str) 
         _ws_connections.get(project_id, set()).discard(ws)
 
 
+async def _cleanup_worker():
+    """Background task to periodically clean up expired projects."""
+    while True:
+        try:
+            # Wake up every 5 minutes
+            await asyncio.sleep(300)
+            
+            expired_ids = await database.get_expired_projects(hours=2)
+            for pid in expired_ids:
+                logger.info(f"Auto-deleting expired project {pid}")
+                
+                # 1. Delete from database
+                await database.delete_project(pid)
+                
+                # 2. Delete all files from disk
+                project_dir = os.path.join(TMP_DIR, pid)
+                if os.path.isdir(project_dir):
+                    shutil.rmtree(project_dir, ignore_errors=True)
+                    
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"Error in cleanup worker: {e}")
+
+
 # ---------------------------------------------------------------------------
 # Startup event — initialise the database
 # ---------------------------------------------------------------------------
@@ -149,6 +174,9 @@ async def on_startup() -> None:
     await database.init_db()
     os.makedirs(TMP_DIR, exist_ok=True)
     logger.info("Database initialised, tmp dir ready at %s", TMP_DIR)
+    
+    # Start the background cleanup worker
+    asyncio.create_task(_cleanup_worker())
 
 
 # ---------------------------------------------------------------------------
