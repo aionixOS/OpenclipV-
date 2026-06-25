@@ -274,7 +274,7 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
             try:
                 import subprocess
                 cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", file_path]
-                result_proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                result_proc = await asyncio.to_thread(subprocess.run, cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 video_duration = float(result_proc.stdout.strip())
             except Exception as e:
                 logger.warning(f"Failed to get duration for uploaded file: {e}")

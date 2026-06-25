@@ -84,7 +84,7 @@ async def _apply_blur_layout(input_path: str, output_path: str, vid_width: int, 
         output_path, "-y"
     ]
     
-    result = subprocess.run(cmd, capture_output=True)
+    result = await asyncio.to_thread(subprocess.run, cmd, capture_output=True)
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg static blur reframe failed: {result.stderr.decode()}")
 
@@ -103,6 +103,7 @@ def _get_video_dimensions(video_path: str) -> tuple[int, int]:
       "-v", "error", "-select_streams", "v:0", 
       "-show_entries", "stream=width,height", "-of", "json", video_path
   ]
+  # Safe to use blocking subprocess.run here because ffprobe is nearly instantaneous
   result = subprocess.run(cmd, capture_output=True, text=True)
   if result.returncode != 0:
       raise RuntimeError(f"FFprobe failed: {result.stderr}")
@@ -129,6 +130,6 @@ async def _cut_raw_clip(
       ffmpeg_path, "-y", "-ss", str(start), "-i", video_path,
       "-t", str(duration), "-c", "copy", output_path
   ]
-  result = subprocess.run(cmd, capture_output=True, text=True)
+  result = await asyncio.to_thread(subprocess.run, cmd, capture_output=True, text=True)
   if result.returncode != 0:
       raise RuntimeError(f"FFmpeg failed cutting raw clip: {result.stderr}")
