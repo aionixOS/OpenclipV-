@@ -58,7 +58,7 @@ export default function CreateProjectPage() {
                 .then(data => { setGeneratedClips(data.clips || []); setIsProcessing(false); })
                 .catch(() => { setApiError("Failed to load clips."); setIsProcessing(false); });
         } else if (stage === "error") {
-            setIsProcessing(false);
+            // We no longer automatically setIsProcessing(false) so the user can read the logs.
             setApiError(message || "Processing failed with an unknown error.");
         }
     }, [stage, message, projectId]);
@@ -365,14 +365,25 @@ export default function CreateProjectPage() {
                                     })
                                 )}
                                 <div ref={logsEndRef} />
-                                {isProcessing && (
+                                {isProcessing && stage !== "error" && (
                                     <div className="flex items-center gap-1">
                                         <span className="text-accent-purple/70">[{new Date().toLocaleTimeString()}]</span>
-                                        <span className="text-white animate-pulse">_</span>
+                                        <span className="text-slate-400">_</span>
+                                        <span className="w-2 h-4 bg-slate-400 animate-pulse" />
                                     </div>
                                 )}
                             </div>
                         </div>
+                        {stage === "error" && (
+                            <button
+                                type="button"
+                                onClick={() => setIsProcessing(false)}
+                                className="mt-6 w-full rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 py-4 text-sm font-bold text-red-400 transition-all shadow-lg shadow-red-500/5 flex items-center justify-center gap-2"
+                            >
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                Close & Back to Menu
+                            </button>
+                        )}
                     </div>
 
                     {/* Info bar */}

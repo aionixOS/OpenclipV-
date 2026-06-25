@@ -305,6 +305,20 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
         llm_model = await settings_mod.get_setting("llm_model", user_id=user_id) or ("gpt-4o-mini" if llm_provider == "openai" else "gemini-2.0-flash")
 
         try:
+            import logging
+            
+            class WsLogHandler(logging.Handler):
+                def emit(self, record):
+                    log_msg = self.format(record)
+                    asyncio.run_coroutine_threadsafe(
+                        _broadcast(project_id, "analyzing", 55, log_msg),
+                        loop
+                    )
+                    
+            ws_handler = WsLogHandler()
+            ws_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+            llm.logger.addHandler(ws_handler)
+
             def analyze_progress(stage: str, percent: float, msg: str):
                 asyncio.run_coroutine_threadsafe(
                     _broadcast(project_id, stage, percent, msg),
@@ -316,7 +330,11 @@ async def _run_pipeline(project_id: str, youtube_url: str, override_api_key: Opt
                 progress_callback=analyze_progress
             )
 
+            llm.logger.removeHandler(ws_handler)
+
         except Exception as e:
+            if 'ws_handler' in locals():
+                llm.logger.removeHandler(ws_handler)
             msg = str(e).lower()
             if "nonretryableerror" in msg or "api error" in msg or "400" in msg or "401" in msg or "403" in msg or "404" in msg:
                 err_msg = f"Configuration Error (User Fault): {e}"
