@@ -638,6 +638,8 @@ async def update_settings(body: UpdateSettingsRequest, x_user_id: str = Header(.
     }
     for key, value in pairs.items():
         if value is not None:
+            if isinstance(value, str):
+                value = value.strip()
             await settings_mod.set_setting(key, value, user_id=x_user_id)
     return {"success": True}
 
