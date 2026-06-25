@@ -79,7 +79,7 @@ async def _apply_blur_layout(input_path: str, output_path: str, vid_width: int, 
 
     cmd = [
         ffmpeg_path, "-i", input_path,
-        "-vf", filter_complex,
+        "-filter_complex", filter_complex,
         "-c:a", "copy",
         output_path, "-y"
     ]
